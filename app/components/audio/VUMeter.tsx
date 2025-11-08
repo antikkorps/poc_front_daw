@@ -20,11 +20,11 @@ export function VUMeter({ trackId, className, orientation = "vertical" }: VUMete
     const interval = setInterval(() => {
       // Generate mock meter data with some randomness
       const basePeak = -30 + Math.random() * 25;
-      setMeterData({
+      setMeterData((prev) => ({
         peak: basePeak,
         rms: basePeak - 3 - Math.random() * 6,
-        peakHold: Math.max(meterData.peakHold * 0.98, basePeak),
-      });
+        peakHold: Math.max(prev.peakHold * 0.98, basePeak),
+      }));
     }, 50); // Update at ~20fps
 
     return () => clearInterval(interval);
