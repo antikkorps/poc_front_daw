@@ -5,6 +5,7 @@ import { Button } from "~/components/ui/button";
 import { mockPlugins } from "~/lib/mockData";
 import type { Plugin, PluginCategory } from "~/types/plugin";
 import { cn } from "~/lib/utils";
+import { useToast } from "~/lib/toast";
 import { Puzzle, Download, Power, Search } from "lucide-react";
 
 const CATEGORIES: (PluginCategory | "All")[] = [
@@ -23,14 +24,25 @@ export default function PluginsPage() {
   const [plugins, setPlugins] = useState<Plugin[]>(mockPlugins);
   const [selectedCategory, setSelectedCategory] = useState<PluginCategory | "All">("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const { showToast } = useToast();
 
   const togglePluginLoad = (pluginId: string) => {
+    const plugin = plugins.find((p) => p.id === pluginId);
+    if (!plugin) return;
+
+    const isLoading = !plugin.loaded;
+
     setPlugins((prev) =>
       prev.map((p) =>
         p.id === pluginId
-          ? { ...p, loaded: !p.loaded, instanceId: !p.loaded ? `inst-${Date.now()}` : undefined }
+          ? { ...p, loaded: isLoading, instanceId: isLoading ? `inst-${Date.now()}` : undefined }
           : p
       )
+    );
+
+    showToast(
+      isLoading ? `Plugin "${plugin.name}" loaded successfully` : `Plugin "${plugin.name}" unloaded`,
+      isLoading ? "success" : "info"
     );
   };
 

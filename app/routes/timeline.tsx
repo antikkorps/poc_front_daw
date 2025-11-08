@@ -1,15 +1,19 @@
 import { useState } from "react";
 import { Layout } from "~/components/layout/Layout";
+import { DraggableClip } from "~/components/timeline/DraggableClip";
 import { mockTracks, mockClips } from "~/lib/mockData";
+import { useToast } from "~/lib/toast";
 import type { Track, Clip } from "~/types/audio";
 import { cn } from "~/lib/utils";
 
 export default function TimelinePage() {
   const [tracks] = useState<Track[]>(mockTracks);
+  const [clips, setClips] = useState<Clip[]>(mockClips);
   const [zoom, setZoom] = useState(50); // pixels per second
   const [selectedClips, setSelectedClips] = useState<Set<string>>(new Set());
+  const { showToast } = useToast();
 
-  const maxTime = Math.max(...mockClips.map((c) => c.startTime + c.duration), 16);
+  const maxTime = Math.max(...clips.map((c) => c.startTime + c.duration), 16);
   const timelineWidth = maxTime * zoom;
 
   const toggleClipSelection = (clipId: string) => {
@@ -24,6 +28,27 @@ export default function TimelinePage() {
     });
   };
 
+  const handleClipMove = (clipId: string, newStartTime: number) => {
+    setClips((prev) =>
+      prev.map((clip) =>
+        clip.id === clipId ? { ...clip, startTime: newStartTime } : clip
+      )
+    );
+
+    const clip = clips.find((c) => c.id === clipId);
+    if (clip) {
+      showToast(`Moved "${clip.name}" to ${newStartTime.toFixed(2)}s`, "success", 1500);
+    }
+  };
+
+  const handleClipResize = (clipId: string, newDuration: number) => {
+    setClips((prev) =>
+      prev.map((clip) =>
+        clip.id === clipId ? { ...clip, duration: newDuration } : clip
+      )
+    );
+  };
+
   return (
     <Layout>
       <div className="h-full flex flex-col bg-zinc-900">
@@ -31,7 +56,9 @@ export default function TimelinePage() {
         <div className="p-4 border-b border-zinc-800 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-white">Timeline</h2>
-            <p className="text-zinc-400 text-sm mt-1">Arrange your audio and MIDI clips</p>
+            <p className="text-zinc-400 text-sm mt-1">
+              Drag clips to arrange • Snaps to 0.25s grid
+            </p>
           </div>
 
           {/* Zoom Controls */}
@@ -108,50 +135,19 @@ export default function TimelinePage() {
                   </div>
 
                   {/* Clips for this track */}
-                  {track.clips.map((clip) => (
-                    <div
-                      key={clip.id}
-                      className={cn(
-                        "absolute top-2 bottom-2 rounded cursor-pointer transition-all",
-                        "hover:brightness-110",
-                        selectedClips.has(clip.id) && "ring-2 ring-white"
-                      )}
-                      style={{
-                        left: clip.startTime * zoom,
-                        width: clip.duration * zoom,
-                        backgroundColor: clip.color,
-                      }}
-                      onClick={() => toggleClipSelection(clip.id)}
-                    >
-                      <div className="p-2 h-full flex flex-col justify-between">
-                        <div className="text-xs font-medium text-white truncate">
-                          {clip.name}
-                        </div>
-                        <div className="flex justify-between items-end">
-                          <span className="text-xs text-white/70">
-                            {clip.type === "audio" ? "♪" : "⌨"}
-                          </span>
-                          <span className="text-xs text-white/70 font-mono">
-                            {clip.duration.toFixed(1)}s
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Fade indicators */}
-                      {clip.fadeIn && (
-                        <div
-                          className="absolute left-0 top-0 bottom-0 bg-black/20"
-                          style={{ width: `${(clip.fadeIn / clip.duration) * 100}%` }}
-                        />
-                      )}
-                      {clip.fadeOut && (
-                        <div
-                          className="absolute right-0 top-0 bottom-0 bg-black/20"
-                          style={{ width: `${(clip.fadeOut! / clip.duration) * 100}%` }}
-                        />
-                      )}
-                    </div>
-                  ))}
+                  {clips
+                    .filter((clip) => clip.trackId === track.id)
+                    .map((clip) => (
+                      <DraggableClip
+                        key={clip.id}
+                        clip={clip}
+                        zoom={zoom}
+                        isSelected={selectedClips.has(clip.id)}
+                        onSelect={toggleClipSelection}
+                        onMove={handleClipMove}
+                        onResize={handleClipResize}
+                      />
+                    ))}
                 </div>
               ))}
             </div>
@@ -163,7 +159,7 @@ export default function TimelinePage() {
           {selectedClips.size > 0 ? (
             <span>{selectedClips.size} clip{selectedClips.size > 1 ? "s" : ""} selected</span>
           ) : (
-            <span>Click clips to select · Drag to move (mock)</span>
+            <span>Drag clips to move • Hold Shift for multi-select (coming soon)</span>
           )}
         </div>
       </div>
