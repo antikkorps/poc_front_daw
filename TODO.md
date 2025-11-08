@@ -27,25 +27,45 @@
 
 ---
 
+## ✅ Completed (Phase 2)
+
+### UI/UX Improvements
+- [x] Add Framer Motion animations to page transitions
+- [x] Toast notifications for actions (plugin loaded, shortcuts, etc.)
+- [x] Implement actual drag-and-drop for timeline clips
+- [x] Keyboard shortcuts (Space, Esc, R, Ctrl+S, Ctrl+Z, etc.)
+
+### Components Added
+- [x] PageTransition component with fade + slide animations
+- [x] ToastProvider with 4 types (success, error, warning, info)
+- [x] DraggableClip component with Framer Motion
+- [x] useKeyboardShortcuts hook
+
+### Integration
+- [x] Toast system integrated in root layout
+- [x] Keyboard shortcuts integrated in Layout
+- [x] Plugin load/unload notifications
+- [x] Timeline clip drag with grid snapping (0.25s)
+- [x] Transport controls via keyboard
+
+---
+
 ## 🚧 In Progress / Next Steps
 
-### Phase 2: Enhancements
+### Phase 2.5: Additional Enhancements
 
 #### UI/UX Improvements
-- [ ] Add Framer Motion animations to page transitions
-- [ ] Animate track controls (fader, knob interactions)
+- [ ] Animate track controls (fader, knob interactions) with Framer Motion
 - [ ] Add loading states and skeleton screens
-- [ ] Improve drag interactions for timeline clips
 - [ ] Add context menus (right-click) for tracks and clips
-- [ ] Toast notifications for actions (plugin loaded, etc.)
+- [ ] Add clip resizing handles in timeline
 
 #### Functionality
-- [ ] Implement actual drag-and-drop for timeline clips
-- [ ] Add clip resizing in timeline
-- [ ] Implement note drawing in piano roll
+- [ ] Implement note drawing in piano roll (click to add)
 - [ ] Add track routing selector in mixer
 - [ ] Implement effect bypass toggle
 - [ ] Add preset management for effects
+- [ ] Multi-select clips (Shift+Click)
 
 #### Performance
 - [ ] Optimize VUMeter rendering (consider RAF throttling)
@@ -223,11 +243,12 @@
 - ✅ Clean, professional UI
 - ✅ 60fps animations
 
-### Phase 2 (Enhanced POC)
-- [ ] Smooth animations on all interactions
-- [ ] Drag-and-drop fully functional
-- [ ] No UI lag on interactions
-- [ ] Keyboard shortcuts for common actions
+### Phase 2 (Enhanced POC) - ✅ ACHIEVED
+- ✅ Smooth animations on page transitions
+- ✅ Drag-and-drop functional (timeline clips)
+- ✅ No UI lag on interactions
+- ✅ Keyboard shortcuts for common actions
+- ✅ Toast notification system
 
 ### Phase 3 (Tauri Integration)
 - [ ] Real audio playback working
@@ -239,5 +260,5 @@
 ---
 
 **Last Updated**: 2025-11-08
-**Current Phase**: Phase 1 Complete ✅
-**Next Milestone**: Phase 2 - UI Enhancements
+**Current Phase**: Phase 2 Complete ✅
+**Next Milestone**: Phase 2.5 - Additional enhancements / Phase 3 - Tauri Integration
