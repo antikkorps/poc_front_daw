@@ -4,7 +4,7 @@ import { VUMeter } from "~/components/audio/VUMeter";
 import { Button } from "~/components/ui/button";
 import { cn, panToString } from "~/lib/utils";
 import type { Track as TrackType } from "~/types/audio";
-import { Volume2, Circle, Square } from "lucide-react";
+import { Circle } from "lucide-react";
 
 interface TrackProps {
   track: TrackType;
