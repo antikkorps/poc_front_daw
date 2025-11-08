@@ -65,7 +65,7 @@ export function Knob({
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isDragging, startY, startValue, min, max]);
+  }, [isDragging, startY, startValue, min, max, onChange]);
 
   const displayValue = valueDisplay ? valueDisplay(value) : value.toFixed(2);
 
