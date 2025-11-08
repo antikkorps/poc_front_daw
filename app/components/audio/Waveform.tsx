@@ -24,6 +24,7 @@ export function Waveform({ className, color = "#06b6d4", animate: shouldAnimate 
       const rect = canvas.getBoundingClientRect();
       canvas.width = rect.width * dpr;
       canvas.height = rect.height * dpr;
+      ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform before scaling
       ctx.scale(dpr, dpr);
       canvas.style.width = `${rect.width}px`;
       canvas.style.height = `${rect.height}px`;
