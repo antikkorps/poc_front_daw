@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Fader } from "~/components/audio/Fader";
 import { Knob } from "~/components/audio/Knob";
 import { VUMeter } from "~/components/audio/VUMeter";
