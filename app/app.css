@@ -7,9 +7,39 @@
 
 html,
 body {
-  @apply bg-white dark:bg-gray-950;
+  @apply bg-zinc-950 text-zinc-50;
+  color-scheme: dark;
+  overflow: hidden;
+}
 
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
-  }
+#root {
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: theme(colors.zinc.900);
+}
+
+::-webkit-scrollbar-thumb {
+  background: theme(colors.zinc.700);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: theme(colors.zinc.600);
+}
+
+/* Disable text selection for UI controls */
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
