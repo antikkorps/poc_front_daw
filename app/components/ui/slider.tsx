@@ -32,7 +32,7 @@ const Slider = React.forwardRef<HTMLInputElement, SliderProps>(
         )}
         style={{
           writingMode: orientation === "vertical" ? "bt-lr" : undefined,
-          WebkitAppearance: "slider-vertical",
+          WebkitAppearance: orientation === "vertical" ? "slider-vertical" : undefined,
         } as React.CSSProperties}
         {...props}
       />
