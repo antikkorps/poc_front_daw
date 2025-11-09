@@ -1,5 +1,5 @@
 import { motion, useDragControls, type PanInfo } from "framer-motion";
-import { useState } from "react";
+import { useState, memo } from "react";
 import { cn } from "~/lib/utils";
 import { ContextMenu, type ContextMenuItem } from "~/components/ui/context-menu";
 import type { Clip } from "~/types/audio";
@@ -24,7 +24,7 @@ interface DraggableClipProps {
   onSplit?: (clipId: string) => void;
 }
 
-export function DraggableClip({
+export const DraggableClip = memo(function DraggableClip({
   clip,
   zoom,
   isSelected,
@@ -228,4 +228,4 @@ export function DraggableClip({
       </motion.div>
     </ContextMenu>
   );
-}
+});

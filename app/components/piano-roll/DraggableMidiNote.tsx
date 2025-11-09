@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, memo } from "react";
 import { cn } from "~/lib/utils";
 import type { MidiNote } from "~/types/midi";
 
@@ -16,7 +16,7 @@ interface DraggableMidiNoteProps {
   snapToGrid: (time: number) => number;
 }
 
-export function DraggableMidiNote({
+export const DraggableMidiNote = memo(function DraggableMidiNote({
   note,
   isSelected,
   beatWidth,
@@ -136,4 +136,4 @@ export function DraggableMidiNote({
       </div>
     </motion.div>
   );
-}
+});

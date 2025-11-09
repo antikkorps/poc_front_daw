@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, memo } from "react";
 import { cn } from "~/lib/utils";
 
 interface WaveformProps {
@@ -7,7 +7,7 @@ interface WaveformProps {
   animate?: boolean;
 }
 
-export function Waveform({ className, color = "#06b6d4", animate: shouldAnimate = true }: WaveformProps) {
+export const Waveform = memo(function Waveform({ className, color = "#06b6d4", animate: shouldAnimate = true }: WaveformProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | undefined>(undefined);
 
@@ -112,4 +112,4 @@ export function Waveform({ className, color = "#06b6d4", animate: shouldAnimate 
       className={cn("w-full h-full", className)}
     />
   );
-}
+});

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { Fader } from "~/components/audio/Fader";
 import { Knob } from "~/components/audio/Knob";
 import { VUMeter } from "~/components/audio/VUMeter";
@@ -39,7 +39,7 @@ interface TrackProps {
   isMaster?: boolean;
 }
 
-export function Track({ track, onUpdate, isMaster = false }: TrackProps) {
+export const Track = memo(function Track({ track, onUpdate, isMaster = false }: TrackProps) {
   const { showToast } = useToast();
 
   const handleVolumeChange = (volume: number) => {
@@ -208,4 +208,4 @@ export function Track({ track, onUpdate, isMaster = false }: TrackProps) {
       </div>
     </div>
   );
-}
+});
