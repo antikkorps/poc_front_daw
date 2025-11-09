@@ -73,8 +73,6 @@ export function DraggableClip({
     },
     {
       separator: true,
-      label: "",
-      onClick: () => {},
     },
     {
       label: clip.gain && clip.gain < -40 ? "Unmute" : "Mute",
@@ -93,8 +91,6 @@ export function DraggableClip({
     },
     {
       separator: true,
-      label: "",
-      onClick: () => {},
     },
     {
       label: "Delete",

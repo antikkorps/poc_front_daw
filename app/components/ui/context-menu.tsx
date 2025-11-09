@@ -2,15 +2,19 @@ import { useState, useEffect, useRef, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "~/lib/utils";
 
-export interface ContextMenuItem {
-  label: string;
-  icon?: ReactNode;
-  onClick: () => void;
-  disabled?: boolean;
-  separator?: boolean;
-  danger?: boolean;
-  shortcut?: string;
-}
+export type ContextMenuItem = 
+  | {
+      separator: true;
+    }
+  | {
+      separator?: false;
+      label: string;
+      icon?: ReactNode;
+      onClick: () => void;
+      disabled?: boolean;
+      danger?: boolean;
+      shortcut?: string;
+    };
 
 interface ContextMenuProps {
   items: ContextMenuItem[];
@@ -40,6 +44,7 @@ export function ContextMenu({ items, children, className }: ContextMenuProps) {
   };
 
   const handleItemClick = (item: ContextMenuItem) => {
+    if (item.separator) return;
     if (item.disabled) return;
     item.onClick();
     handleClose();
