@@ -94,7 +94,7 @@ export function ContextMenu({ items, children, className }: ContextMenuProps) {
     if (newX !== position.x || newY !== position.y) {
       setPosition({ x: newX, y: newY });
     }
-  }, [isOpen, position]);
+  }, [isOpen, position.x, position.y]);
 
   return (
     <div onContextMenu={handleContextMenu} className={className}>
