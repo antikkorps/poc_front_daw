@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Knob } from "~/components/audio/Knob";
 import { Button } from "~/components/ui/button";
 import { Power } from "lucide-react";
+import { useToast } from "~/lib/toast";
 
 const initialNodes: Node[] = [
   {
@@ -65,6 +66,7 @@ export default function EffectsPage() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const { showToast } = useToast();
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -80,6 +82,75 @@ export default function EffectsPage() {
   const [delayParams, setDelayParams] = useState({ time: 0.375, feedback: 0.4, mix: 0.3 });
   const [reverbParams, setReverbParams] = useState({ roomSize: 0.7, damping: 0.5, mix: 0.25 });
 
+  // Bypass state for each effect
+  const [bypassedEffects, setBypassedEffects] = useState<Record<string, boolean>>({
+    filter: false,
+    delay: false,
+    reverb: false,
+  });
+
+  // Effect presets
+  const filterPresets = {
+    "Low Pass Warm": { cutoff: 800, resonance: 0.3, type: 0 },
+    "High Pass Clean": { cutoff: 250, resonance: 0.1, type: 1 },
+    "Band Pass Vocal": { cutoff: 2000, resonance: 0.6, type: 2 },
+    "Resonant Sweep": { cutoff: 5000, resonance: 0.9, type: 0 },
+  };
+
+  const delayPresets = {
+    "Slapback": { time: 0.125, feedback: 0.2, mix: 0.2 },
+    "Quarter Note": { time: 0.5, feedback: 0.4, mix: 0.3 },
+    "Long Echo": { time: 1.0, feedback: 0.6, mix: 0.4 },
+    "Ping Pong": { time: 0.375, feedback: 0.5, mix: 0.35 },
+  };
+
+  const reverbPresets = {
+    "Small Room": { roomSize: 0.3, damping: 0.6, mix: 0.15 },
+    "Medium Hall": { roomSize: 0.6, damping: 0.5, mix: 0.25 },
+    "Large Cathedral": { roomSize: 0.9, damping: 0.3, mix: 0.35 },
+    "Plate": { roomSize: 0.7, damping: 0.7, mix: 0.20 },
+  };
+
+  const toggleBypass = useCallback(
+    (effectId: string, effectName: string) => {
+      setBypassedEffects((prev) => {
+        const newState = !prev[effectId];
+        showToast(
+          `${effectName} ${newState ? "bypassed" : "enabled"}`,
+          newState ? "warning" : "success",
+          1500
+        );
+        return { ...prev, [effectId]: newState };
+      });
+    },
+    [showToast]
+  );
+
+  const loadPreset = useCallback(
+    (effectType: string, presetName: string) => {
+      if (effectType === "filter") {
+        const preset = filterPresets[presetName as keyof typeof filterPresets];
+        if (preset) {
+          setFilterParams(preset);
+          showToast(`Loaded preset: ${presetName}`, "success", 1500);
+        }
+      } else if (effectType === "delay") {
+        const preset = delayPresets[presetName as keyof typeof delayPresets];
+        if (preset) {
+          setDelayParams(preset);
+          showToast(`Loaded preset: ${presetName}`, "success", 1500);
+        }
+      } else if (effectType === "reverb") {
+        const preset = reverbPresets[presetName as keyof typeof reverbPresets];
+        if (preset) {
+          setReverbParams(preset);
+          showToast(`Loaded preset: ${presetName}`, "success", 1500);
+        }
+      }
+    },
+    [filterPresets, delayPresets, reverbPresets, showToast]
+  );
+
   const renderEffectControls = (): React.ReactNode => {
     if (!selectedNode || selectedNode.type === "input" || selectedNode.type === "output") {
       return (
@@ -90,11 +161,37 @@ export default function EffectsPage() {
     }
 
     const effectType = selectedNode.data.type as string;
+    const isBypassed = bypassedEffects[selectedNode.id];
 
     switch (effectType) {
       case "filter":
         return (
-          <div className="space-y-6">
+          <div className={`space-y-6 transition-opacity ${isBypassed ? "opacity-40" : ""}`}>
+            {isBypassed && (
+              <div className="text-xs text-amber-500 text-center py-2 bg-amber-500/10 rounded border border-amber-500/20">
+                Effect is bypassed
+              </div>
+            )}
+
+            {/* Preset selector */}
+            <div>
+              <label className="text-xs text-zinc-500 mb-2 block">Presets</label>
+              <select
+                className="w-full text-xs bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-zinc-300 hover:border-zinc-600 focus:border-cyan-500 focus:outline-none"
+                onChange={(e) => loadPreset("filter", e.target.value)}
+                defaultValue=""
+              >
+                <option value="" disabled>
+                  Load a preset...
+                </option>
+                {Object.keys(filterPresets).map((presetName) => (
+                  <option key={presetName} value={presetName}>
+                    {presetName}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="flex justify-around">
               <Knob
                 value={filterParams.cutoff}
@@ -133,7 +230,32 @@ export default function EffectsPage() {
 
       case "delay":
         return (
-          <div className="space-y-6">
+          <div className={`space-y-6 transition-opacity ${isBypassed ? "opacity-40" : ""}`}>
+            {isBypassed && (
+              <div className="text-xs text-amber-500 text-center py-2 bg-amber-500/10 rounded border border-amber-500/20">
+                Effect is bypassed
+              </div>
+            )}
+
+            {/* Preset selector */}
+            <div>
+              <label className="text-xs text-zinc-500 mb-2 block">Presets</label>
+              <select
+                className="w-full text-xs bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-zinc-300 hover:border-zinc-600 focus:border-cyan-500 focus:outline-none"
+                onChange={(e) => loadPreset("delay", e.target.value)}
+                defaultValue=""
+              >
+                <option value="" disabled>
+                  Load a preset...
+                </option>
+                {Object.keys(delayPresets).map((presetName) => (
+                  <option key={presetName} value={presetName}>
+                    {presetName}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="flex justify-around">
               <Knob
                 value={delayParams.time}
@@ -165,7 +287,32 @@ export default function EffectsPage() {
 
       case "reverb":
         return (
-          <div className="space-y-6">
+          <div className={`space-y-6 transition-opacity ${isBypassed ? "opacity-40" : ""}`}>
+            {isBypassed && (
+              <div className="text-xs text-amber-500 text-center py-2 bg-amber-500/10 rounded border border-amber-500/20">
+                Effect is bypassed
+              </div>
+            )}
+
+            {/* Preset selector */}
+            <div>
+              <label className="text-xs text-zinc-500 mb-2 block">Presets</label>
+              <select
+                className="w-full text-xs bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-zinc-300 hover:border-zinc-600 focus:border-cyan-500 focus:outline-none"
+                onChange={(e) => loadPreset("reverb", e.target.value)}
+                defaultValue=""
+              >
+                <option value="" disabled>
+                  Load a preset...
+                </option>
+                {Object.keys(reverbPresets).map((presetName) => (
+                  <option key={presetName} value={presetName}>
+                    {presetName}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="flex justify-around">
               <Knob
                 value={reverbParams.roomSize}
@@ -239,17 +386,38 @@ export default function EffectsPage() {
               <div className="space-y-1">
                 {initialNodes
                   .filter((n) => n.type !== "input" && n.type !== "output")
-                  .map((node) => (
-                    <div
-                      key={node.id}
-                      className="flex items-center justify-between p-2 rounded bg-zinc-900 border border-zinc-800"
-                    >
-                      <span className="text-sm">{(node.data as { label: string }).label}</span>
-                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
-                        <Power className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  ))}
+                  .map((node) => {
+                    const effectId = node.id;
+                    const isBypassed = bypassedEffects[effectId];
+                    return (
+                      <div
+                        key={node.id}
+                        className={`flex items-center justify-between p-2 rounded border transition-all ${
+                          isBypassed
+                            ? "bg-zinc-900/50 border-zinc-700 opacity-60"
+                            : "bg-zinc-900 border-zinc-800"
+                        }`}
+                      >
+                        <span className={`text-sm ${isBypassed ? "line-through text-zinc-600" : ""}`}>
+                          {(node.data as { label: string }).label}
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0"
+                          onClick={() =>
+                            toggleBypass(effectId, (node.data as { label: string }).label)
+                          }
+                        >
+                          <Power
+                            className={`w-3 h-3 transition-colors ${
+                              isBypassed ? "text-zinc-600" : "text-green-500"
+                            }`}
+                          />
+                        </Button>
+                      </div>
+                    );
+                  })}
               </div>
             </CardContent>
           </Card>

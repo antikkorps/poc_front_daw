@@ -4,8 +4,34 @@ import { Knob } from "~/components/audio/Knob";
 import { VUMeter } from "~/components/audio/VUMeter";
 import { Button } from "~/components/ui/button";
 import { cn, panToString } from "~/lib/utils";
+import { useToast } from "~/lib/toast";
 import type { Track as TrackType } from "~/types/audio";
 import { Volume2, Circle, Square } from "lucide-react";
+
+// Available routing options
+const INPUT_SOURCES = [
+  "In 1-2",
+  "In 3-4",
+  "In 5-6",
+  "In 7-8",
+  "Bus A",
+  "Bus B",
+  "Bus C",
+  "Bus D",
+  "Sidechain",
+];
+
+const OUTPUT_DESTINATIONS = [
+  "Master",
+  "Bus A",
+  "Bus B",
+  "Bus C",
+  "Bus D",
+  "Out 1-2",
+  "Out 3-4",
+  "Out 5-6",
+  "Out 7-8",
+];
 
 interface TrackProps {
   track: TrackType;
@@ -14,12 +40,24 @@ interface TrackProps {
 }
 
 export function Track({ track, onUpdate, isMaster = false }: TrackProps) {
+  const { showToast } = useToast();
+
   const handleVolumeChange = (volume: number) => {
     onUpdate({ volume });
   };
 
   const handlePanChange = (pan: number) => {
     onUpdate({ pan });
+  };
+
+  const handleInputChange = (input: string) => {
+    onUpdate({ input });
+    showToast(`${track.name} input: ${input}`, "success", 1500);
+  };
+
+  const handleOutputChange = (output: string) => {
+    onUpdate({ output });
+    showToast(`${track.name} output: ${output}`, "success", 1500);
   };
 
   const toggleSolo = () => {
@@ -55,12 +93,30 @@ export function Track({ track, onUpdate, isMaster = false }: TrackProps) {
       {/* Input/Output */}
       {!isMaster && (
         <div className="w-full space-y-1">
+          <div className="text-[10px] text-zinc-600 uppercase font-semibold mb-0.5">Input</div>
           <select
-            className="w-full text-xs bg-zinc-950 border border-zinc-700 rounded px-1 py-0.5 text-zinc-400"
-            value={track.input}
-            onChange={(e) => onUpdate({ input: e.target.value })}
+            className="w-full text-xs bg-zinc-950 border border-zinc-700 rounded px-1 py-0.5 text-zinc-300 hover:border-zinc-600 focus:border-cyan-500 focus:outline-none transition-colors"
+            value={track.input || "In 1-2"}
+            onChange={(e) => handleInputChange(e.target.value)}
           >
-            <option>{track.input}</option>
+            {INPUT_SOURCES.map((source) => (
+              <option key={source} value={source}>
+                {source}
+              </option>
+            ))}
+          </select>
+
+          <div className="text-[10px] text-zinc-600 uppercase font-semibold mb-0.5 mt-2">Output</div>
+          <select
+            className="w-full text-xs bg-zinc-950 border border-zinc-700 rounded px-1 py-0.5 text-zinc-300 hover:border-zinc-600 focus:border-cyan-500 focus:outline-none transition-colors"
+            value={track.output || "Master"}
+            onChange={(e) => handleOutputChange(e.target.value)}
+          >
+            {OUTPUT_DESTINATIONS.map((dest) => (
+              <option key={dest} value={dest}>
+                {dest}
+              </option>
+            ))}
           </select>
         </div>
       )}

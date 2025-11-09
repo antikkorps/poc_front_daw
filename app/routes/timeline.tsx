@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Layout } from "~/components/layout/Layout";
 import { DraggableClip } from "~/components/timeline/DraggableClip";
 import { mockTracks, mockClips } from "~/lib/mockData";
@@ -16,14 +16,23 @@ export default function TimelinePage() {
   const maxTime = Math.max(...clips.map((c) => c.startTime + c.duration), 16);
   const timelineWidth = maxTime * zoom;
 
-  const toggleClipSelection = (clipId: string) => {
+  const handleClipSelection = (clipId: string, shiftKey: boolean) => {
     setSelectedClips((prev) => {
       const next = new Set(prev);
-      if (next.has(clipId)) {
-        next.delete(clipId);
+
+      if (shiftKey) {
+        // Shift+Click: toggle this clip in the selection
+        if (next.has(clipId)) {
+          next.delete(clipId);
+        } else {
+          next.add(clipId);
+        }
       } else {
+        // Normal click: select only this clip
+        next.clear();
         next.add(clipId);
       }
+
       return next;
     });
   };
@@ -104,6 +113,72 @@ export default function TimelinePage() {
 
     showToast(`Split "${clip.name}" at ${splitPoint.toFixed(2)}s`, "success", 1500);
   };
+
+  // Group operations
+  const deleteSelectedClips = useCallback(() => {
+    if (selectedClips.size === 0) return;
+
+    const count = selectedClips.size;
+    setClips((prev) => prev.filter((c) => !selectedClips.has(c.id)));
+    setSelectedClips(new Set());
+    showToast(`Deleted ${count} clip${count > 1 ? "s" : ""}`, "info", 1500);
+  }, [selectedClips, showToast]);
+
+  const duplicateSelectedClips = useCallback(() => {
+    if (selectedClips.size === 0) return;
+
+    const newClips: Clip[] = [];
+    clips.forEach((clip) => {
+      if (selectedClips.has(clip.id)) {
+        newClips.push({
+          ...clip,
+          id: `clip-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          startTime: clip.startTime + clip.duration + 0.5,
+        });
+      }
+    });
+
+    setClips((prev) => [...prev, ...newClips]);
+    showToast(
+      `Duplicated ${newClips.length} clip${newClips.length > 1 ? "s" : ""}`,
+      "success",
+      1500
+    );
+  }, [clips, selectedClips, showToast]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if typing in input
+      const target = e.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
+
+      if ((e.key === "Delete" || e.key === "Backspace") && selectedClips.size > 0) {
+        e.preventDefault();
+        deleteSelectedClips();
+      }
+
+      if (e.ctrlKey && e.key === "d" && selectedClips.size > 0) {
+        e.preventDefault();
+        duplicateSelectedClips();
+      }
+
+      if (e.ctrlKey && e.key === "a") {
+        e.preventDefault();
+        setSelectedClips(new Set(clips.map((c) => c.id)));
+        showToast(`Selected all ${clips.length} clips`, "info", 1000);
+      }
+
+      if (e.key === "Escape" && selectedClips.size > 0) {
+        e.preventDefault();
+        setSelectedClips(new Set());
+        showToast("Deselected all clips", "info", 1000);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedClips, clips, deleteSelectedClips, duplicateSelectedClips, showToast]);
 
   return (
     <Layout>
@@ -199,7 +274,7 @@ export default function TimelinePage() {
                         clip={clip}
                         zoom={zoom}
                         isSelected={selectedClips.has(clip.id)}
-                        onSelect={toggleClipSelection}
+                        onSelect={handleClipSelection}
                         onMove={handleClipMove}
                         onResize={handleClipResize}
                         onDuplicate={handleClipDuplicate}
@@ -216,9 +291,17 @@ export default function TimelinePage() {
         {/* Info Bar */}
         <div className="h-8 bg-zinc-950 border-t border-zinc-800 flex items-center px-4 text-xs text-zinc-500">
           {selectedClips.size > 0 ? (
-            <span>{selectedClips.size} clip{selectedClips.size > 1 ? "s" : ""} selected</span>
+            <span>
+              {selectedClips.size} clip{selectedClips.size > 1 ? "s" : ""} selected •{" "}
+              <span className="text-zinc-400">Del</span> to delete •{" "}
+              <span className="text-zinc-400">Ctrl+D</span> to duplicate •{" "}
+              <span className="text-zinc-400">Esc</span> to deselect
+            </span>
           ) : (
-            <span>Drag clips to move • Hold Shift for multi-select (coming soon)</span>
+            <span>
+              Click to select • Hold <span className="text-zinc-400">Shift</span> for multi-select •{" "}
+              <span className="text-zinc-400">Ctrl+A</span> to select all
+            </span>
           )}
         </div>
       </div>
