@@ -10,6 +10,17 @@ const GRID_SNAPS: GridSnap[] = ["1/4", "1/8", "1/16", "1/32"];
 const NOTE_HEIGHT = 16;
 const BEAT_WIDTH = 80;
 
+// Grid snap denominators for converting snap to duration in beats
+const SNAP_DENOMINATORS: Record<GridSnap, number> = {
+  "1/1": 1,
+  "1/2": 0.5,
+  "1/4": 0.25,
+  "1/8": 0.125,
+  "1/16": 0.0625,
+  "1/32": 0.03125,
+  "1/64": 0.015625,
+};
+
 export default function PianoRollPage() {
   const [notes, setNotes] = useState<MidiNote[]>(mockMidiNotes);
   const [gridSnap, setGridSnap] = useState<GridSnap>("1/16");
@@ -52,16 +63,7 @@ export default function PianoRollPage() {
 
   // Convert grid snap to duration in beats
   const getSnapDuration = (): number => {
-    const denominators = {
-      "1/1": 1,
-      "1/2": 0.5,
-      "1/4": 0.25,
-      "1/8": 0.125,
-      "1/16": 0.0625,
-      "1/32": 0.03125,
-      "1/64": 0.015625,
-    };
-    return denominators[gridSnap];
+    return SNAP_DENOMINATORS[gridSnap];
   };
 
   const snapToGrid = (time: number): number => {
@@ -93,7 +95,7 @@ export default function PianoRollPage() {
 
     // Add new note
     const newNote: MidiNote = {
-      id: `note-${Date.now()}`,
+      id: `note-${crypto.randomUUID()}`,
       pitch,
       velocity: 100,
       startTime: time,
@@ -116,7 +118,7 @@ export default function PianoRollPage() {
       deleteSelectedNotes();
     } else if (e.key === "a" && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
-      setSelectedNotes(new Set(notes.map((n) => n.id)));
+      setSelectedNotes(() => new Set(notes.map((n) => n.id)));
       showToast("Selected all notes", "info", 1000);
     }
   };

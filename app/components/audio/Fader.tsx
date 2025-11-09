@@ -25,12 +25,6 @@ export function Fader({
 
   const percentage = ((value - min) / (max - min)) * 100;
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-    updateValue(e.clientY);
-  };
-
   const updateValue = (clientY: number) => {
     if (!faderRef.current) return;
 
@@ -41,11 +35,23 @@ export function Fader({
     onChange(clamp(newValue, min, max));
   };
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    updateValue(e.clientY);
+  };
+
   useEffect(() => {
     if (!isDragging) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      updateValue(e.clientY);
+      if (!faderRef.current) return;
+
+      const rect = faderRef.current.getBoundingClientRect();
+      const y = clamp(e.clientY - rect.top, 0, rect.height);
+      const percentage = 1 - y / rect.height;
+      const newValue = min + percentage * (max - min);
+      onChange(clamp(newValue, min, max));
     };
 
     const handleMouseUp = () => {
@@ -59,7 +65,7 @@ export function Fader({
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isDragging, min, max]);
+  }, [isDragging, min, max, onChange]);
 
   // Determine color based on dB value
   const getColor = () => {
