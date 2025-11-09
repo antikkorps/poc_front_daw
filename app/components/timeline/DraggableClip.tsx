@@ -1,5 +1,5 @@
 import { motion, useDragControls, type PanInfo } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "~/lib/utils";
 import { ContextMenu, type ContextMenuItem } from "~/components/ui/context-menu";
 import type { Clip } from "~/types/audio";
@@ -16,7 +16,7 @@ interface DraggableClipProps {
   clip: Clip;
   zoom: number;
   isSelected: boolean;
-  onSelect: (clipId: string) => void;
+  onSelect: (clipId: string, shiftKey: boolean) => void;
   onMove: (clipId: string, newStartTime: number) => void;
   onResize: (clipId: string, newDuration: number) => void;
   onDuplicate?: (clipId: string) => void;
@@ -36,11 +36,25 @@ export function DraggableClip({
   onSplit,
 }: DraggableClipProps) {
   const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState<"left" | "right" | null>(null);
   const dragControls = useDragControls();
+  const cleanupRef = useRef<(() => void) | null>(null);
 
-  const handleDragStart = () => {
+  // Cleanup event listeners on unmount or when resize ends
+  useEffect(() => {
+    return () => {
+      if (cleanupRef.current) {
+        cleanupRef.current();
+        cleanupRef.current = null;
+      }
+    };
+  }, []);
+
+  const handleDragStart = (event: MouseEvent | TouchEvent | PointerEvent) => {
     setIsDragging(true);
-    onSelect(clip.id);
+    // Check if shift key is pressed during drag start
+    const shiftKey = "shiftKey" in event && event.shiftKey;
+    onSelect(clip.id, shiftKey);
   };
 
   const handleDrag = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
@@ -56,6 +70,52 @@ export function DraggableClip({
 
   const handleDragEnd = () => {
     setIsDragging(false);
+  };
+
+  const handleResizeStart = (side: "left" | "right") => (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsResizing(side);
+
+    const startX = e.clientX;
+    const startTime = clip.startTime;
+    const startDuration = clip.duration;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const deltaX = moveEvent.clientX - startX;
+      const deltaTime = deltaX / zoom;
+
+      if (side === "left") {
+        // Resizing from the left: change both startTime and duration
+        const newStartTime = Math.max(0, startTime + deltaTime);
+        const snappedStart = Math.round(newStartTime * 4) / 4; // Snap to 0.25s grid
+        const newDuration = Math.max(0.25, startDuration - (snappedStart - startTime));
+
+        onMove(clip.id, snappedStart);
+        onResize(clip.id, newDuration);
+      } else {
+        // Resizing from the right: change only duration
+        const newDuration = Math.max(0.25, startDuration + deltaTime);
+        const snappedDuration = Math.round(newDuration * 4) / 4; // Snap to 0.25s grid
+
+        onResize(clip.id, snappedDuration);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(null);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+      cleanupRef.current = null;
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+
+    // Store cleanup function in ref for unmount cleanup
+    cleanupRef.current = () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
   };
 
   const contextMenuItems: ContextMenuItem[] = [
@@ -104,7 +164,7 @@ export function DraggableClip({
   return (
     <ContextMenu items={contextMenuItems}>
       <motion.div
-        drag="x"
+        drag={isResizing ? false : "x"}
         dragControls={dragControls}
         dragMomentum={false}
         dragElastic={0}
@@ -114,17 +174,21 @@ export function DraggableClip({
         whileHover={{ scale: 1.02, zIndex: 10 }}
         whileTap={{ scale: 0.98 }}
         className={cn(
-          "absolute top-2 bottom-2 rounded cursor-move transition-all",
+          "absolute top-2 bottom-2 rounded transition-all",
+          isResizing ? "cursor-ew-resize" : "cursor-move",
           "hover:brightness-110",
           isSelected && "ring-2 ring-white shadow-lg",
-          isDragging && "opacity-75 z-50"
+          (isDragging || isResizing) && "opacity-75 z-50"
         )}
         style={{
           left: clip.startTime * zoom,
           width: clip.duration * zoom,
           backgroundColor: clip.color,
         }}
-        onClick={() => onSelect(clip.id)}
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect(clip.id, e.shiftKey);
+        }}
       >
         <div className="p-2 h-full flex flex-col justify-between pointer-events-none">
           <div className="text-xs font-medium text-white truncate">
@@ -156,12 +220,20 @@ export function DraggableClip({
 
         {/* Resize handles */}
         <div
-          className="absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-white/20 transition-colors pointer-events-auto"
+          className={cn(
+            "absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-white/30 transition-all pointer-events-auto z-10",
+            isResizing === "left" && "bg-white/40"
+          )}
           title="Resize left"
+          onMouseDown={handleResizeStart("left")}
         />
         <div
-          className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-white/20 transition-colors pointer-events-auto"
+          className={cn(
+            "absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-white/30 transition-all pointer-events-auto z-10",
+            isResizing === "right" && "bg-white/40"
+          )}
           title="Resize right"
+          onMouseDown={handleResizeStart("right")}
         />
       </motion.div>
     </ContextMenu>

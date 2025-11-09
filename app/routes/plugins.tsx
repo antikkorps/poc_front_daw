@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "~/components/layout/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
+import { Skeleton } from "~/components/ui/skeleton";
 import { mockPlugins } from "~/lib/mockData";
 import type { Plugin, PluginCategory } from "~/types/plugin";
 import { cn } from "~/lib/utils";
@@ -21,10 +22,21 @@ const CATEGORIES: (PluginCategory | "All")[] = [
 ];
 
 export default function PluginsPage() {
-  const [plugins, setPlugins] = useState<Plugin[]>(mockPlugins);
+  const [plugins, setPlugins] = useState<Plugin[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<PluginCategory | "All">("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const { showToast } = useToast();
+
+  // Simulate loading plugins
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPlugins(mockPlugins);
+      setIsLoading(false);
+    }, 1200); // 1.2 second loading time
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const togglePluginLoad = (pluginId: string) => {
     const plugin = plugins.find((p) => p.id === pluginId);
@@ -72,39 +84,73 @@ export default function PluginsPage() {
 
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardDescription>Total Plugins</CardDescription>
-                <CardTitle className="text-3xl">{plugins.length}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-xs text-zinc-500">Available in library</div>
-              </CardContent>
-            </Card>
+            {isLoading ? (
+              <>
+                <Card>
+                  <CardHeader className="pb-3">
+                    <Skeleton className="h-4 w-24 mb-2" />
+                    <Skeleton className="h-9 w-16" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-3 w-32" />
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-3">
+                    <Skeleton className="h-4 w-24 mb-2" />
+                    <Skeleton className="h-9 w-16" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-3 w-32" />
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-3">
+                    <Skeleton className="h-4 w-24 mb-2" />
+                    <Skeleton className="h-9 w-16" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-3 w-32" />
+                  </CardContent>
+                </Card>
+              </>
+            ) : (
+              <>
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardDescription>Total Plugins</CardDescription>
+                    <CardTitle className="text-3xl">{plugins.length}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-xs text-zinc-500">Available in library</div>
+                  </CardContent>
+                </Card>
 
-            <Card>
-              <CardHeader className="pb-3">
-                <CardDescription>Loaded</CardDescription>
-                <CardTitle className="text-3xl">{loadedPlugins.length}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-xs text-zinc-500">Currently active</div>
-              </CardContent>
-            </Card>
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardDescription>Loaded</CardDescription>
+                    <CardTitle className="text-3xl">{loadedPlugins.length}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-xs text-zinc-500">Currently active</div>
+                  </CardContent>
+                </Card>
 
-            <Card>
-              <CardHeader className="pb-3">
-                <CardDescription>Instruments</CardDescription>
-                <CardTitle className="text-3xl">
-                  {plugins.filter((p) => p.category === "Instrument").length}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-xs text-zinc-500">
-                  {plugins.filter((p) => p.category !== "Instrument").length} effects
-                </div>
-              </CardContent>
-            </Card>
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardDescription>Instruments</CardDescription>
+                    <CardTitle className="text-3xl">
+                      {plugins.filter((p) => p.category === "Instrument").length}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-xs text-zinc-500">
+                      {plugins.filter((p) => p.category !== "Instrument").length} effects
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
           </div>
 
           {/* Loaded Plugins */}
@@ -201,7 +247,28 @@ export default function PluginsPage() {
 
               {/* Plugin List */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[600px] overflow-y-auto pr-2">
-                {filteredPlugins.map((plugin) => (
+                {isLoading ? (
+                  <>
+                    {Array.from({ length: 6 }).map((_, idx) => (
+                      <div
+                        key={idx}
+                        className="p-4 rounded-lg border bg-zinc-900 border-zinc-800"
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <Skeleton className="h-4 w-32 mb-2" />
+                            <Skeleton className="h-3 w-24" />
+                          </div>
+                          <Skeleton className="h-8 w-16 ml-2" />
+                        </div>
+                        <Skeleton className="h-5 w-20 mb-2" />
+                        <Skeleton className="h-3 w-full mb-1" />
+                        <Skeleton className="h-3 w-3/4" />
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  filteredPlugins.map((plugin) => (
                   <div
                     key={plugin.id}
                     className={cn(
@@ -251,10 +318,11 @@ export default function PluginsPage() {
                       ))}
                     </div>
                   </div>
-                ))}
+                  ))
+                )}
               </div>
 
-              {filteredPlugins.length === 0 && (
+              {!isLoading && filteredPlugins.length === 0 && (
                 <div className="text-center py-12 text-zinc-500">
                   <Puzzle className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p>No plugins found</p>
