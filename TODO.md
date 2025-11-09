@@ -108,17 +108,23 @@
   - [x] 60fps throttling with timestamp-based updates
   - [x] Ref-based peakHold calculation
   - [x] Proper cleanup and memory management
+- [x] Memoize expensive components
+  - [x] VUMeter (8 instances, 60fps updates)
+  - [x] Track (8+ instances in mixer)
+  - [x] Waveform (canvas RAF-based animations)
+  - [x] DraggableClip (timeline performance)
+  - [x] DraggableMidiNote (piano roll performance)
+- [x] Lazy load route components
+  - React Router 7 handles this automatically with code-splitting
+
+**Note:** Virtual scrolling for plugin list skipped (only 8 items in POC,
+will be useful when connecting to real plugin scanner with 100+ plugins)
 
 ---
 
-## 🚧 In Progress / Next Steps
+## 🚧 Next Steps
 
-### Phase 2.5+: Additional Optimizations (Optional)
-
-#### Performance
-- [ ] Add virtual scrolling for plugin list
-- [ ] Lazy load route components
-- [ ] Memoize expensive components
+### Phase 3: Tauri Integration (READY TO START! 🚀)
 
 ---
 
@@ -307,5 +313,5 @@
 ---
 
 **Last Updated**: 2025-11-09
-**Current Phase**: Phase 2.5+ Polish Complete ✅
-**Next Milestone**: Phase 3 - Tauri Integration / Additional Optimizations (Optional)
+**Current Phase**: Phase 2.5+ ALL COMPLETE ✅✅✅
+**Next Milestone**: Phase 3 - Tauri Integration 🦀🚀
