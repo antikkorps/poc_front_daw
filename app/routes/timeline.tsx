@@ -49,6 +49,62 @@ export default function TimelinePage() {
     );
   };
 
+  const handleClipDuplicate = (clipId: string) => {
+    const clip = clips.find((c) => c.id === clipId);
+    if (!clip) return;
+
+    const newClip: Clip = {
+      ...clip,
+      id: `clip-${Date.now()}`,
+      startTime: clip.startTime + clip.duration + 0.5, // Place right after with gap
+    };
+
+    setClips((prev) => [...prev, newClip]);
+    showToast(`Duplicated "${clip.name}"`, "success", 1500);
+  };
+
+  const handleClipDelete = (clipId: string) => {
+    const clip = clips.find((c) => c.id === clipId);
+    setClips((prev) => prev.filter((c) => c.id !== clipId));
+    setSelectedClips((prev) => {
+      const next = new Set(prev);
+      next.delete(clipId);
+      return next;
+    });
+    if (clip) {
+      showToast(`Deleted "${clip.name}"`, "info", 1500);
+    }
+  };
+
+  const handleClipSplit = (clipId: string) => {
+    const clip = clips.find((c) => c.id === clipId);
+    if (!clip) return;
+
+    // Split at middle for demo
+    const splitPoint = clip.duration / 2;
+
+    const firstHalf: Clip = {
+      ...clip,
+      id: `${clip.id}-1`,
+      duration: splitPoint,
+    };
+
+    const secondHalf: Clip = {
+      ...clip,
+      id: `${clip.id}-2`,
+      startTime: clip.startTime + splitPoint,
+      duration: clip.duration - splitPoint,
+    };
+
+    setClips((prev) => [
+      ...prev.filter((c) => c.id !== clipId),
+      firstHalf,
+      secondHalf,
+    ]);
+
+    showToast(`Split "${clip.name}" at ${splitPoint.toFixed(2)}s`, "success", 1500);
+  };
+
   return (
     <Layout>
       <div className="h-full flex flex-col bg-zinc-900">
@@ -146,6 +202,9 @@ export default function TimelinePage() {
                         onSelect={toggleClipSelection}
                         onMove={handleClipMove}
                         onResize={handleClipResize}
+                        onDuplicate={handleClipDuplicate}
+                        onDelete={handleClipDelete}
+                        onSplit={handleClipSplit}
                       />
                     ))}
                 </div>
