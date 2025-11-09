@@ -42,6 +42,9 @@ export const NOTE_NAMES = [
   "B",
 ];
 
+// Minimum note duration in beats (1/32 note)
+export const MIN_NOTE_DURATION = 0.03125;
+
 export function midiNoteToName(midiNote: number): string {
   const octave = Math.floor(midiNote / 12) - 1;
   const noteName = NOTE_NAMES[midiNote % 12];

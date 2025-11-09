@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import { cn } from "~/lib/utils";
 import type { MidiNote } from "~/types/midi";
+import { MIN_NOTE_DURATION } from "~/types/midi";
 
 interface DraggableMidiNoteProps {
   note: MidiNote;
@@ -75,7 +76,7 @@ export function DraggableMidiNote({
     const handleMouseMove = (moveEvent: MouseEvent) => {
       const deltaX = moveEvent.clientX - startX;
       const deltaTime = deltaX / beatWidth;
-      const newDuration = Math.max(0.03125, startDuration + deltaTime); // Min 1/32 beat
+      const newDuration = Math.max(MIN_NOTE_DURATION, startDuration + deltaTime);
       const snappedDuration = snapToGrid(newDuration);
 
       onResize(note.id, snappedDuration);
