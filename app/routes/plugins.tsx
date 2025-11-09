@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Layout } from "~/components/layout/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
-import { Skeleton, SkeletonCard } from "~/components/ui/skeleton";
+import { Skeleton } from "~/components/ui/skeleton";
 import { mockPlugins } from "~/lib/mockData";
 import type { Plugin, PluginCategory } from "~/types/plugin";
 import { cn } from "~/lib/utils";
