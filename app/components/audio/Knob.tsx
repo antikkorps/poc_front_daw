@@ -133,11 +133,10 @@ export function Knob({
             strokeLinecap="round"
             className="text-zinc-200"
             animate={{
-              rotate: angle,
               strokeWidth: isDragging ? 4 : 3,
             }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            style={{ transformOrigin: "50px 50px" }}
+            transform={`rotate(${angle} 50 50)`}
           />
 
           {/* Center dot */}
