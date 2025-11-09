@@ -62,6 +62,28 @@ const initialEdges: Edge[] = [
   { id: "e5", source: "reverb", target: "output", animated: true },
 ];
 
+// Effect presets - moved outside component to prevent recreation on every render
+const filterPresets = {
+  "Low Pass Warm": { cutoff: 800, resonance: 0.3, type: 0 },
+  "High Pass Clean": { cutoff: 250, resonance: 0.1, type: 1 },
+  "Band Pass Vocal": { cutoff: 2000, resonance: 0.6, type: 2 },
+  "Resonant Sweep": { cutoff: 5000, resonance: 0.9, type: 0 },
+};
+
+const delayPresets = {
+  "Slapback": { time: 0.125, feedback: 0.2, mix: 0.2 },
+  "Quarter Note": { time: 0.5, feedback: 0.4, mix: 0.3 },
+  "Long Echo": { time: 1.0, feedback: 0.6, mix: 0.4 },
+  "Ping Pong": { time: 0.375, feedback: 0.5, mix: 0.35 },
+};
+
+const reverbPresets = {
+  "Small Room": { roomSize: 0.3, damping: 0.6, mix: 0.15 },
+  "Medium Hall": { roomSize: 0.6, damping: 0.5, mix: 0.25 },
+  "Large Cathedral": { roomSize: 0.9, damping: 0.3, mix: 0.35 },
+  "Plate": { roomSize: 0.7, damping: 0.7, mix: 0.20 },
+};
+
 export default function EffectsPage() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -88,28 +110,6 @@ export default function EffectsPage() {
     delay: false,
     reverb: false,
   });
-
-  // Effect presets
-  const filterPresets = {
-    "Low Pass Warm": { cutoff: 800, resonance: 0.3, type: 0 },
-    "High Pass Clean": { cutoff: 250, resonance: 0.1, type: 1 },
-    "Band Pass Vocal": { cutoff: 2000, resonance: 0.6, type: 2 },
-    "Resonant Sweep": { cutoff: 5000, resonance: 0.9, type: 0 },
-  };
-
-  const delayPresets = {
-    "Slapback": { time: 0.125, feedback: 0.2, mix: 0.2 },
-    "Quarter Note": { time: 0.5, feedback: 0.4, mix: 0.3 },
-    "Long Echo": { time: 1.0, feedback: 0.6, mix: 0.4 },
-    "Ping Pong": { time: 0.375, feedback: 0.5, mix: 0.35 },
-  };
-
-  const reverbPresets = {
-    "Small Room": { roomSize: 0.3, damping: 0.6, mix: 0.15 },
-    "Medium Hall": { roomSize: 0.6, damping: 0.5, mix: 0.25 },
-    "Large Cathedral": { roomSize: 0.9, damping: 0.3, mix: 0.35 },
-    "Plate": { roomSize: 0.7, damping: 0.7, mix: 0.20 },
-  };
 
   const toggleBypass = useCallback(
     (effectId: string, effectName: string) => {
