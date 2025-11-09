@@ -116,7 +116,7 @@ export default function PianoRollPage() {
       deleteSelectedNotes();
     } else if (e.key === "a" && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
-      setSelectedNotes(new Set(notes.map((n) => n.id)));
+      setSelectedNotes(() => new Set(notes.map((n) => n.id)));
       showToast("Selected all notes", "info", 1000);
     }
   };
