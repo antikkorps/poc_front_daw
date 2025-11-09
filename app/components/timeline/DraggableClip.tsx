@@ -37,6 +37,7 @@ export function DraggableClip({
 }: DraggableClipProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState<"left" | "right" | null>(null);
+  const [dragStartTime, setDragStartTime] = useState(0);
   const dragControls = useDragControls();
   const cleanupRef = useRef<(() => void) | null>(null);
 
@@ -52,24 +53,27 @@ export function DraggableClip({
 
   const handleDragStart = (event: MouseEvent | TouchEvent | PointerEvent) => {
     setIsDragging(true);
+    setDragStartTime(clip.startTime);
     // Check if shift key is pressed during drag start
     const shiftKey = "shiftKey" in event && event.shiftKey;
     onSelect(clip.id, shiftKey);
   };
 
-  const handleDrag = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    // Calculate new start time based on drag offset
+  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    setIsDragging(false);
+
+    // Calculate final position on drag end
     const pixelOffset = info.offset.x;
     const timeOffset = pixelOffset / zoom;
-    const newStartTime = Math.max(0, clip.startTime + timeOffset);
+    const newStartTime = Math.max(0, dragStartTime + timeOffset);
 
     // Snap to grid (0.25 second intervals)
     const snappedTime = Math.round(newStartTime * 4) / 4;
-    onMove(clip.id, snappedTime);
-  };
 
-  const handleDragEnd = () => {
-    setIsDragging(false);
+    // Only call onMove once at the end if position changed
+    if (snappedTime !== clip.startTime) {
+      onMove(clip.id, snappedTime);
+    }
   };
 
   const handleResizeStart = (side: "left" | "right") => (e: React.MouseEvent) => {
@@ -168,8 +172,8 @@ export function DraggableClip({
         dragControls={dragControls}
         dragMomentum={false}
         dragElastic={0}
+        dragConstraints={{ left: -(clip.startTime * zoom), right: 10000 }}
         onDragStart={handleDragStart}
-        onDrag={handleDrag}
         onDragEnd={handleDragEnd}
         whileHover={{ scale: 1.02, zIndex: 10 }}
         whileTap={{ scale: 0.98 }}

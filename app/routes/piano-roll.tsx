@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Layout } from "~/components/layout/Layout";
+import { DraggableMidiNote } from "~/components/piano-roll/DraggableMidiNote";
 import { mockMidiNotes } from "~/lib/mockData";
 import { midiNoteToName } from "~/types/midi";
 import { useToast } from "~/lib/toast";
@@ -59,6 +60,20 @@ export default function PianoRollPage() {
     setNotes((prev) => prev.filter((n) => !selectedNotes.has(n.id)));
     setSelectedNotes(new Set());
     showToast(`Deleted ${selectedNotes.size} note(s)`, "success", 1500);
+  };
+
+  const handleNoteMove = (noteId: string, newStartTime: number, newPitch: number) => {
+    setNotes((prev) =>
+      prev.map((n) =>
+        n.id === noteId ? { ...n, startTime: newStartTime, pitch: newPitch } : n
+      )
+    );
+  };
+
+  const handleNoteResize = (noteId: string, newDuration: number) => {
+    setNotes((prev) =>
+      prev.map((n) => (n.id === noteId ? { ...n, duration: newDuration } : n))
+    );
   };
 
   // Convert grid snap to duration in beats
@@ -131,7 +146,7 @@ export default function PianoRollPage() {
           <div>
             <h2 className="text-2xl font-bold text-white">Piano Roll</h2>
             <p className="text-zinc-400 text-sm mt-1">
-              Click to add notes • Delete to remove • Ctrl+A to select all
+              Click to add • Drag to move • Resize to change duration • Delete to remove
             </p>
           </div>
 
@@ -235,44 +250,21 @@ export default function PianoRollPage() {
                 className="absolute inset-0 pointer-events-none"
                 style={{ height: noteRange * NOTE_HEIGHT }}
               >
-                {notes.map((note) => {
-                  const y = (maxNote - note.pitch) * NOTE_HEIGHT;
-                  const x = note.startTime * BEAT_WIDTH;
-                  const width = note.duration * BEAT_WIDTH;
-                  const velocity = note.velocity / 127;
-
-                  return (
-                    <div
-                      key={note.id}
-                      className={cn(
-                        "absolute rounded cursor-pointer transition-all pointer-events-auto",
-                        "hover:brightness-110",
-                        selectedNotes.has(note.id) && "ring-2 ring-white"
-                      )}
-                      style={{
-                        top: y + 2,
-                        left: x,
-                        width: width - 4,
-                        height: NOTE_HEIGHT - 4,
-                        backgroundColor: `rgba(6, 182, 212, ${0.5 + velocity * 0.5})`,
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleNoteSelection(note.id);
-                      }}
-                      onDoubleClick={(e) => {
-                        e.stopPropagation();
-                        deleteNote(note.id);
-                      }}
-                    >
-                      <div className="h-full flex items-center px-2">
-                        <span className="text-xs text-white/90 font-mono">
-                          {note.velocity}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
+                {notes.map((note) => (
+                  <DraggableMidiNote
+                    key={note.id}
+                    note={note}
+                    isSelected={selectedNotes.has(note.id)}
+                    beatWidth={BEAT_WIDTH}
+                    noteHeight={NOTE_HEIGHT}
+                    maxNote={maxNote}
+                    onSelect={toggleNoteSelection}
+                    onMove={handleNoteMove}
+                    onResize={handleNoteResize}
+                    onDelete={deleteNote}
+                    snapToGrid={snapToGrid}
+                  />
+                ))}
               </div>
             </div>
           </div>
@@ -286,7 +278,7 @@ export default function PianoRollPage() {
             </span>
           ) : (
             <span>
-              Grid: {gridSnap} • {notes.length} notes • Click to add • Double-click to delete
+              Grid: {gridSnap} • {notes.length} notes • Click to add • Drag to move • Resize from right edge • Double-click to delete
             </span>
           )}
         </div>
