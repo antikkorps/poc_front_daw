@@ -50,18 +50,35 @@
 
 ---
 
+## ✅ Completed (Phase 2.5)
+
+### UI/UX Improvements
+- [x] Animate track controls (fader, knob interactions) with Framer Motion
+  - [x] Fader with hover/drag states, scale animations, glow effects
+  - [x] Knob with rotation, scale animations, growing center dot
+- [x] Add context menus (right-click) for tracks and clips
+  - [x] Duplicate, Split, Mute, Normalize, Delete actions
+  - [x] Smart positioning to stay on screen
+  - [x] Toast notifications for all actions
+
+### Functionality
+- [x] Implement note drawing in piano roll (click to add)
+  - [x] Grid snapping for note placement
+  - [x] Double-click to delete notes
+  - [x] Keyboard shortcuts (Delete, Ctrl+A)
+  - [x] Visual feedback with selection highlighting
+
+---
+
 ## 🚧 In Progress / Next Steps
 
-### Phase 2.5: Additional Enhancements
+### Phase 2.5+: Polish & Optimization
 
 #### UI/UX Improvements
-- [ ] Animate track controls (fader, knob interactions) with Framer Motion
 - [ ] Add loading states and skeleton screens
-- [ ] Add context menus (right-click) for tracks and clips
 - [ ] Add clip resizing handles in timeline
 
 #### Functionality
-- [ ] Implement note drawing in piano roll (click to add)
 - [ ] Add track routing selector in mixer
 - [ ] Implement effect bypass toggle
 - [ ] Add preset management for effects
@@ -259,6 +276,6 @@
 
 ---
 
-**Last Updated**: 2025-11-08
-**Current Phase**: Phase 2 Complete ✅
-**Next Milestone**: Phase 2.5 - Additional enhancements / Phase 3 - Tauri Integration
+**Last Updated**: 2025-11-09
+**Current Phase**: Phase 2.5 Complete ✅
+**Next Milestone**: Phase 2.5+ Polish (Optional) / Phase 3 - Tauri Integration
