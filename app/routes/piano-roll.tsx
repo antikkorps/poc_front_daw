@@ -93,7 +93,7 @@ export default function PianoRollPage() {
 
     // Add new note
     const newNote: MidiNote = {
-      id: `note-${Date.now()}`,
+      id: `note-${crypto.randomUUID()}`,
       pitch,
       velocity: 100,
       startTime: time,
