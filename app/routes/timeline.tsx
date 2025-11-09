@@ -38,18 +38,18 @@ export default function TimelinePage() {
   };
 
   const handleClipMove = (clipId: string, newStartTime: number) => {
-    const clip = clips.find((c) => c.id === clipId);
-
-    setClips((prev) =>
-      prev.map((c) =>
+    setClips((prev) => {
+      const clip = prev.find((c) => c.id === clipId);
+      
+      // Show toast notification when drag is complete
+      if (clip) {
+        showToast(`Moved "${clip.name}" to ${newStartTime.toFixed(2)}s`, "success", 1000);
+      }
+      
+      return prev.map((c) =>
         c.id === clipId ? { ...c, startTime: newStartTime } : c
-      )
-    );
-
-    // Show toast notification when drag is complete
-    if (clip) {
-      showToast(`Moved "${clip.name}" to ${newStartTime.toFixed(2)}s`, "success", 1000);
-    }
+      );
+    });
   };
 
   const handleClipResize = (clipId: string, newDuration: number) => {
@@ -61,59 +61,68 @@ export default function TimelinePage() {
   };
 
   const handleClipDuplicate = (clipId: string) => {
-    const clip = clips.find((c) => c.id === clipId);
-    if (!clip) return;
+    setClips((prev) => {
+      const clip = prev.find((c) => c.id === clipId);
+      if (!clip) return prev;
 
-    const newClip: Clip = {
-      ...clip,
-      id: `clip-${Date.now()}`,
-      startTime: clip.startTime + clip.duration + 0.5, // Place right after with gap
-    };
+      const newClip: Clip = {
+        ...clip,
+        id: `clip-${Date.now()}`,
+        startTime: clip.startTime + clip.duration + 0.5, // Place right after with gap
+      };
 
-    setClips((prev) => [...prev, newClip]);
-    showToast(`Duplicated "${clip.name}"`, "success", 1500);
+      showToast(`Duplicated "${clip.name}"`, "success", 1500);
+      return [...prev, newClip];
+    });
   };
 
   const handleClipDelete = (clipId: string) => {
-    const clip = clips.find((c) => c.id === clipId);
-    setClips((prev) => prev.filter((c) => c.id !== clipId));
+    setClips((prev) => {
+      const clip = prev.find((c) => c.id === clipId);
+      
+      if (clip) {
+        showToast(`Deleted "${clip.name}"`, "info", 1500);
+      }
+      
+      return prev.filter((c) => c.id !== clipId);
+    });
+    
     setSelectedClips((prev) => {
       const next = new Set(prev);
       next.delete(clipId);
       return next;
     });
-    if (clip) {
-      showToast(`Deleted "${clip.name}"`, "info", 1500);
-    }
   };
 
   const handleClipSplit = (clipId: string) => {
-    const clip = clips.find((c) => c.id === clipId);
-    if (!clip) return;
+    setClips((prev) => {
+      const clip = prev.find((c) => c.id === clipId);
+      if (!clip) return prev;
 
-    // Split at middle for demo
-    const splitPoint = clip.duration / 2;
+      // Split at middle for demo
+      const splitPoint = clip.duration / 2;
 
-    const firstHalf: Clip = {
-      ...clip,
-      id: `${clip.id}-1`,
-      duration: splitPoint,
-    };
+      const firstHalf: Clip = {
+        ...clip,
+        id: `${clip.id}-1`,
+        duration: splitPoint,
+      };
 
-    const secondHalf: Clip = {
-      ...clip,
-      id: `${clip.id}-2`,
-      startTime: clip.startTime + splitPoint,
-      duration: clip.duration - splitPoint,
-    };
+      const secondHalf: Clip = {
+        ...clip,
+        id: `${clip.id}-2`,
+        startTime: clip.startTime + splitPoint,
+        duration: clip.duration - splitPoint,
+      };
 
-    setClips((prev) => [
-      ...prev.filter((c) => c.id !== clipId),
-      firstHalf,
-      secondHalf,
-    ]);
-
-    showToast(`Split "${clip.name}" at ${splitPoint.toFixed(2)}s`, "success", 1500);
+      showToast(`Split "${clip.name}" at ${splitPoint.toFixed(2)}s`, "success", 1500);
+      
+      return [
+        ...prev.filter((c) => c.id !== clipId),
+        firstHalf,
+        secondHalf,
+      ];
+    });
   };
 
   // Group operations
