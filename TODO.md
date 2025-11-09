@@ -70,22 +70,52 @@
 
 ---
 
+## ✅ Completed (Phase 2.5+ Polish)
+
+### UI/UX Improvements
+- [x] Add loading states and skeleton screens
+  - [x] Reusable Skeleton component system
+  - [x] Plugin page loading simulation (1.2s)
+  - [x] Animated pulse effects for loading states
+- [x] Add clip resizing handles in timeline
+  - [x] Functional left and right resize handles
+  - [x] Grid snapping to 0.25s intervals
+  - [x] Visual feedback on hover and resize
+
+### Functionality
+- [x] Add track routing selector in mixer
+  - [x] Input source dropdown (In 1-8, Bus A-D, Sidechain)
+  - [x] Output destination dropdown (Master, Bus A-D, Out 1-8)
+  - [x] Toast notifications for routing changes
+- [x] Implement effect bypass toggle
+  - [x] Bypass state for all effects (Filter, Delay, Reverb)
+  - [x] Visual feedback with opacity and warning badge
+  - [x] Power button with green/gray states
+- [x] Add preset management for effects
+  - [x] 4 presets per effect type
+  - [x] One-click loading with toast confirmation
+  - [x] Professional preset naming (Low Pass Warm, Slapback, etc.)
+- [x] Multi-select clips (Shift+Click)
+  - [x] Shift+Click to toggle clips in selection
+  - [x] Normal click selects single clip
+  - [x] Group delete and duplicate operations
+  - [x] Keyboard shortcuts (Del, Ctrl+D, Ctrl+A, Esc)
+  - [x] Visual feedback with ring for selected clips
+
+### Performance
+- [x] Optimize VUMeter rendering (RAF throttling)
+  - [x] Replace setInterval with requestAnimationFrame
+  - [x] 60fps throttling with timestamp-based updates
+  - [x] Ref-based peakHold calculation
+  - [x] Proper cleanup and memory management
+
+---
+
 ## 🚧 In Progress / Next Steps
 
-### Phase 2.5+: Polish & Optimization
-
-#### UI/UX Improvements
-- [ ] Add loading states and skeleton screens
-- [ ] Add clip resizing handles in timeline
-
-#### Functionality
-- [ ] Add track routing selector in mixer
-- [ ] Implement effect bypass toggle
-- [ ] Add preset management for effects
-- [ ] Multi-select clips (Shift+Click)
+### Phase 2.5+: Additional Optimizations (Optional)
 
 #### Performance
-- [ ] Optimize VUMeter rendering (consider RAF throttling)
 - [ ] Add virtual scrolling for plugin list
 - [ ] Lazy load route components
 - [ ] Memoize expensive components
@@ -277,5 +307,5 @@
 ---
 
 **Last Updated**: 2025-11-09
-**Current Phase**: Phase 2.5 Complete ✅
-**Next Milestone**: Phase 2.5+ Polish (Optional) / Phase 3 - Tauri Integration
+**Current Phase**: Phase 2.5+ Polish Complete ✅
+**Next Milestone**: Phase 3 - Tauri Integration / Additional Optimizations (Optional)
