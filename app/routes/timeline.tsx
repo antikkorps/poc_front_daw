@@ -38,15 +38,17 @@ export default function TimelinePage() {
   };
 
   const handleClipMove = (clipId: string, newStartTime: number) => {
+    const clip = clips.find((c) => c.id === clipId);
+
     setClips((prev) =>
-      prev.map((clip) =>
-        clip.id === clipId ? { ...clip, startTime: newStartTime } : clip
+      prev.map((c) =>
+        c.id === clipId ? { ...c, startTime: newStartTime } : c
       )
     );
 
-    const clip = clips.find((c) => c.id === clipId);
+    // Show toast notification when drag is complete
     if (clip) {
-      showToast(`Moved "${clip.name}" to ${newStartTime.toFixed(2)}s`, "success", 1500);
+      showToast(`Moved "${clip.name}" to ${newStartTime.toFixed(2)}s`, "success", 1000);
     }
   };
 

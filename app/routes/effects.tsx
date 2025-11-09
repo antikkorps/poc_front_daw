@@ -148,7 +148,7 @@ export default function EffectsPage() {
         }
       }
     },
-    [filterPresets, delayPresets, reverbPresets, showToast]
+    [showToast]
   );
 
   const renderEffectControls = (): React.ReactNode => {
