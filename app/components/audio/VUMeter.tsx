@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { cn } from "~/lib/utils";
 import type { VUMeterData } from "~/types/audio";
 
@@ -15,19 +15,44 @@ export function VUMeter({ trackId, className, orientation = "vertical" }: VUMete
     peakHold: -60,
   });
 
-  // Simulate real-time meter updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Generate mock meter data with some randomness
-      const basePeak = -30 + Math.random() * 25;
-      setMeterData({
-        peak: basePeak,
-        rms: basePeak - 3 - Math.random() * 6,
-        peakHold: Math.max(meterData.peakHold * 0.98, basePeak),
-      });
-    }, 50); // Update at ~20fps
+  const rafIdRef = useRef<number | undefined>(undefined);
+  const lastUpdateRef = useRef(0);
+  const peakHoldRef = useRef(-60);
 
-    return () => clearInterval(interval);
+  // Simulate real-time meter updates with RAF throttling
+  useEffect(() => {
+    let isActive = true;
+
+    const updateMeter = (timestamp: number) => {
+      if (!isActive) return;
+
+      // Throttle to ~60fps (16.67ms per frame)
+      const deltaTime = timestamp - lastUpdateRef.current;
+      if (deltaTime >= 16) {
+        lastUpdateRef.current = timestamp;
+
+        // Generate mock meter data with some randomness
+        const basePeak = -30 + Math.random() * 25;
+        peakHoldRef.current = Math.max(peakHoldRef.current * 0.98, basePeak);
+
+        setMeterData({
+          peak: basePeak,
+          rms: basePeak - 3 - Math.random() * 6,
+          peakHold: peakHoldRef.current,
+        });
+      }
+
+      rafIdRef.current = requestAnimationFrame(updateMeter);
+    };
+
+    rafIdRef.current = requestAnimationFrame(updateMeter);
+
+    return () => {
+      isActive = false;
+      if (rafIdRef.current !== undefined) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
+    };
   }, [trackId]);
 
   const min = -60;
