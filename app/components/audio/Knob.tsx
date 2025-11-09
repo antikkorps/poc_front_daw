@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { motion } from "framer-motion";
 import { cn, clamp } from "~/lib/utils";
 
 interface KnobProps {
@@ -23,6 +24,7 @@ export function Knob({
   className,
 }: KnobProps) {
   const [isDragging, setIsDragging] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const [startY, setStartY] = useState(0);
   const [startValue, setStartValue] = useState(value);
 
@@ -71,38 +73,57 @@ export function Knob({
 
   return (
     <div className={cn("flex flex-col items-center gap-2", className)}>
-      <div
+      <motion.div
         className={cn(
-          "relative rounded-full bg-zinc-900 border-2 border-zinc-700 cursor-ns-resize select-none transition-shadow",
-          sizeClasses[size],
-          isDragging && "shadow-lg shadow-cyan-500/20"
+          "relative rounded-full bg-zinc-900 border-2 cursor-ns-resize select-none",
+          sizeClasses[size]
         )}
         onMouseDown={handleMouseDown}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        animate={{
+          scale: isDragging ? 1.15 : isHovered ? 1.08 : 1,
+          borderColor: isDragging ? "#06b6d4" : isHovered ? "#3f3f46" : "#3f3f46",
+          boxShadow: isDragging
+            ? "0 0 25px rgba(6, 182, 212, 0.5)"
+            : isHovered
+            ? "0 0 15px rgba(6, 182, 212, 0.2)"
+            : "0 4px 6px rgba(0, 0, 0, 0.3)",
+        }}
+        transition={{ type: "spring", stiffness: 400, damping: 25 }}
       >
         {/* Tick marks */}
-        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
+        <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100">
           {/* Background arc */}
-          <path
+          <motion.path
             d="M 15,85 A 40 40 0 1 1 85,85"
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
             className="text-zinc-800"
+            animate={{ opacity: isHovered ? 1 : 0.5 }}
           />
 
           {/* Value arc */}
-          <path
+          <motion.path
             d="M 15,85 A 40 40 0 1 1 85,85"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2"
+            strokeWidth="3"
             strokeDasharray={`${normalized * 188.5} 188.5`}
             strokeLinecap="round"
-            className="text-cyan-500 transition-all"
+            className="text-cyan-500"
+            animate={{
+              strokeWidth: isDragging ? 4 : 3,
+              filter: isDragging
+                ? "drop-shadow(0 0 6px rgba(6, 182, 212, 0.8))"
+                : "none",
+            }}
+            transition={{ duration: 0.15 }}
           />
 
           {/* Indicator line */}
-          <line
+          <motion.line
             x1="50"
             y1="50"
             x2="50"
@@ -111,16 +132,43 @@ export function Knob({
             strokeWidth="3"
             strokeLinecap="round"
             className="text-zinc-200"
+            animate={{
+              strokeWidth: isDragging ? 4 : 3,
+            }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
             transform={`rotate(${angle} 50 50)`}
           />
 
           {/* Center dot */}
-          <circle cx="50" cy="50" r="4" fill="currentColor" className="text-zinc-200" />
+          <motion.circle
+            cx="50"
+            cy="50"
+            r="4"
+            fill="currentColor"
+            className="text-zinc-200"
+            animate={{
+              r: isDragging ? 6 : isHovered ? 5 : 4,
+              filter: isDragging
+                ? "drop-shadow(0 0 4px rgba(255, 255, 255, 0.8))"
+                : "none",
+            }}
+            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+          />
         </svg>
-      </div>
+      </motion.div>
 
       {/* Value display */}
-      <div className="text-xs text-zinc-400 font-mono">{displayValue}</div>
+      <motion.div
+        className="text-xs font-mono"
+        animate={{
+          color: isDragging ? "#06b6d4" : "#a1a1aa",
+          scale: isDragging ? 1.1 : 1,
+          fontWeight: isDragging ? 600 : 400,
+        }}
+        transition={{ duration: 0.15 }}
+      >
+        {displayValue}
+      </motion.div>
 
       {label && (
         <div className="text-xs text-zinc-500 font-medium">{label}</div>
