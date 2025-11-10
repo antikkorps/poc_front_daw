@@ -1,5 +1,5 @@
 import { motion, useDragControls, type PanInfo } from "framer-motion";
-import { useState, memo } from "react";
+import { useState, useRef, memo } from "react";
 import { cn } from "~/lib/utils";
 import { ContextMenu, type ContextMenuItem } from "~/components/ui/context-menu";
 import type { Clip } from "~/types/audio";
@@ -17,7 +17,7 @@ interface DraggableClipProps {
   zoom: number;
   isSelected: boolean;
   onSelect: (clipId: string, shiftKey: boolean) => void;
-  onMove: (clipId: string, newStartTime: number) => void;
+  onMove: (clipId: string, newStartTime: number, silent?: boolean) => void;
   onResize: (clipId: string, newDuration: number) => void;
   onDuplicate?: (clipId: string) => void;
   onDelete?: (clipId: string) => void;
@@ -39,6 +39,7 @@ export const DraggableClip = memo(function DraggableClip({
   const [isResizing, setIsResizing] = useState<"left" | "right" | null>(null);
   const [dragStartTime, setDragStartTime] = useState(0);
   const dragControls = useDragControls();
+  const resizeStartPosRef = useRef({ time: 0, duration: 0 });
 
   const handleDragStart = (event: MouseEvent | TouchEvent | PointerEvent) => {
     setIsDragging(true);
@@ -73,6 +74,9 @@ export const DraggableClip = memo(function DraggableClip({
     const startTime = clip.startTime;
     const startDuration = clip.duration;
 
+    // Store initial position for final notification
+    resizeStartPosRef.current = { time: startTime, duration: startDuration };
+
     const handleMouseMove = (moveEvent: MouseEvent) => {
       const deltaX = moveEvent.clientX - startX;
       const deltaTime = deltaX / zoom;
@@ -83,7 +87,8 @@ export const DraggableClip = memo(function DraggableClip({
         const snappedStart = Math.round(newStartTime * 4) / 4; // Snap to 0.25s grid
         const newDuration = Math.max(0.25, startDuration - (snappedStart - startTime));
 
-        onMove(clip.id, snappedStart);
+        // Silent move during resize (no notification)
+        onMove(clip.id, snappedStart, true);
         onResize(clip.id, newDuration);
       } else {
         // Resizing from the right: change only duration
@@ -98,6 +103,12 @@ export const DraggableClip = memo(function DraggableClip({
       setIsResizing(null);
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
+
+      // Only show notification if position actually changed
+      if (side === "left" && clip.startTime !== resizeStartPosRef.current.time) {
+        // Trigger final move with notification
+        onMove(clip.id, clip.startTime, false);
+      }
     };
 
     document.addEventListener("mousemove", handleMouseMove);

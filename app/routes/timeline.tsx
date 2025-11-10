@@ -37,7 +37,7 @@ export default function TimelinePage() {
     });
   };
 
-  const handleClipMove = (clipId: string, newStartTime: number) => {
+  const handleClipMove = (clipId: string, newStartTime: number, silent = false) => {
     const clip = clips.find((c) => c.id === clipId);
 
     setClips((prev) =>
@@ -46,8 +46,8 @@ export default function TimelinePage() {
       )
     );
 
-    // Show toast notification when drag is complete
-    if (clip) {
+    // Show toast notification when drag is complete (unless silent)
+    if (clip && !silent) {
       showToast(`Moved "${clip.name}" to ${newStartTime.toFixed(2)}s`, "success", 1000);
     }
   };
