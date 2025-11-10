@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, memo } from "react";
 import { cn } from "~/lib/utils";
 import type { VUMeterData } from "~/types/audio";
 
@@ -8,7 +8,7 @@ interface VUMeterProps {
   orientation?: "vertical" | "horizontal";
 }
 
-export function VUMeter({ trackId, className, orientation = "vertical" }: VUMeterProps) {
+export const VUMeter = memo(function VUMeter({ trackId, className, orientation = "vertical" }: VUMeterProps) {
   const [meterData, setMeterData] = useState<VUMeterData>({
     peak: -60,
     rms: -60,
@@ -145,4 +145,4 @@ export function VUMeter({ trackId, className, orientation = "vertical" }: VUMete
       {orientation === "vertical" ? renderVerticalMeter() : renderHorizontalMeter()}
     </div>
   );
-}
+});

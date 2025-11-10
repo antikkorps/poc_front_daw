@@ -84,7 +84,7 @@ const initialEdges: Edge[] = [
   { id: "e5", source: "reverb", target: "output", animated: true },
 ];
 
-// Effect presets - moved outside component to prevent recreation on every render
+// Effect presets - defined outside component to prevent recreation
 const filterPresets = {
   "Low Pass Warm": { cutoff: 800, resonance: 0.3, type: 0 },
   "High Pass Clean": { cutoff: 250, resonance: 0.1, type: 1 },

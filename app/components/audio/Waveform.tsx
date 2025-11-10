@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, memo } from "react";
 import { cn } from "~/lib/utils";
 
 interface WaveformProps {
@@ -7,7 +7,7 @@ interface WaveformProps {
   animate?: boolean;
 }
 
-export function Waveform({ className, color = "#06b6d4", animate: shouldAnimate = true }: WaveformProps) {
+function WaveformComponent({ className, color = "#06b6d4", animate: shouldAnimate = true }: WaveformProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | undefined>(undefined);
 
@@ -114,3 +114,15 @@ export function Waveform({ className, color = "#06b6d4", animate: shouldAnimate 
     />
   );
 }
+
+// Custom comparison function to prevent unnecessary re-renders
+// Only re-render if color or animate props actually change
+function arePropsEqual(prevProps: WaveformProps, nextProps: WaveformProps): boolean {
+  return (
+    prevProps.className === nextProps.className &&
+    prevProps.color === nextProps.color &&
+    prevProps.animate === nextProps.animate
+  );
+}
+
+export const Waveform = memo(WaveformComponent, arePropsEqual);

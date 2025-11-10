@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Fader } from "~/components/audio/Fader";
 import { Knob } from "~/components/audio/Knob";
 import { VUMeter } from "~/components/audio/VUMeter";
@@ -34,42 +35,42 @@ const OUTPUT_DESTINATIONS = [
 
 interface TrackProps {
   track: TrackType;
-  onUpdate: (updates: Partial<TrackType>) => void;
+  onUpdate: (trackId: string, updates: Partial<TrackType>) => void;
   isMaster?: boolean;
 }
 
-export function Track({ track, onUpdate, isMaster = false }: TrackProps) {
+export const Track = memo(function Track({ track, onUpdate, isMaster = false }: TrackProps) {
   const { showToast } = useToast();
 
   const handleVolumeChange = (volume: number) => {
-    onUpdate({ volume });
+    onUpdate(track.id, { volume });
   };
 
   const handlePanChange = (pan: number) => {
-    onUpdate({ pan });
+    onUpdate(track.id, { pan });
   };
 
   const handleInputChange = (input: string) => {
-    onUpdate({ input });
+    onUpdate(track.id, { input });
     showToast(`${track.name} input: ${input}`, "success", 1500);
   };
 
   const handleOutputChange = (output: string) => {
-    onUpdate({ output });
+    onUpdate(track.id, { output });
     showToast(`${track.name} output: ${output}`, "success", 1500);
   };
 
   const toggleSolo = () => {
-    onUpdate({ solo: !track.solo });
+    onUpdate(track.id, { solo: !track.solo });
   };
 
   const toggleMute = () => {
-    onUpdate({ mute: !track.mute });
+    onUpdate(track.id, { mute: !track.mute });
   };
 
   const toggleArmed = () => {
     if (!isMaster) {
-      onUpdate({ armed: !track.armed });
+      onUpdate(track.id, { armed: !track.armed });
     }
   };
 
@@ -207,4 +208,4 @@ export function Track({ track, onUpdate, isMaster = false }: TrackProps) {
       </div>
     </div>
   );
-}
+});
