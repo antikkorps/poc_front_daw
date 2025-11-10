@@ -102,6 +102,17 @@
   - [x] Keyboard shortcuts (Del, Ctrl+D, Ctrl+A, Esc)
   - [x] Visual feedback with ring for selected clips
 
+### Bug Fixes
+- [x] Fix duplicate notifications in timeline
+  - [x] Added silent parameter to handleClipMove
+  - [x] Suppress notifications during resize mousemove
+  - [x] Show single notification only at drag/resize end
+- [x] Fix piano roll drag precision issues
+  - [x] Added live preview ghost note with dashed border
+  - [x] Real-time visual feedback of snapped position
+  - [x] Reduced dragged note opacity to 50% for better visibility
+  - [x] Makes precise note placement much easier
+
 ### Performance
 - [x] Optimize VUMeter rendering (RAF throttling)
   - [x] Replace setInterval with requestAnimationFrame
@@ -312,6 +323,6 @@ will be useful when connecting to real plugin scanner with 100+ plugins)
 
 ---
 
-**Last Updated**: 2025-11-09
-**Current Phase**: Phase 2.5+ ALL COMPLETE ✅✅✅
+**Last Updated**: 2025-11-10
+**Current Phase**: Phase 2.5+ ALL COMPLETE ✅✅✅ (including UX bug fixes)
 **Next Milestone**: Phase 3 - Tauri Integration 🦀🚀

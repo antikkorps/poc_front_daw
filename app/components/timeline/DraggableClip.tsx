@@ -1,4 +1,8 @@
-import { motion, useDragControls, type PanInfo } from "framer-motion"
+import { motion, useDragControls, type PanInfo } from "framer-motion";
+import { useState, useRef, memo, useEffect } from "react";
+import { cn } from "~/lib/utils";
+import { ContextMenu, type ContextMenuItem } from "~/components/ui/context-menu";
+import type { Clip } from "~/types/audio";
 import {
   Copy,
   Scissors,
@@ -7,21 +11,17 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react"
-import { memo, useEffect, useRef, useState } from "react"
-import { ContextMenu, type ContextMenuItem } from "~/components/ui/context-menu"
-import { cn } from "~/lib/utils"
-import type { Clip } from "~/types/audio"
 
 interface DraggableClipProps {
-  clip: Clip
-  zoom: number
-  isSelected: boolean
-  onSelect: (clipId: string, shiftKey: boolean) => void
-  onMove: (clipId: string, newStartTime: number) => void
-  onResize: (clipId: string, newDuration: number) => void
-  onDuplicate?: (clipId: string) => void
-  onDelete?: (clipId: string) => void
-  onSplit?: (clipId: string) => void
+  clip: Clip;
+  zoom: number;
+  isSelected: boolean;
+  onSelect: (clipId: string, shiftKey: boolean) => void;
+  onMove: (clipId: string, newStartTime: number, silent?: boolean) => void;
+  onResize: (clipId: string, newDuration: number) => void;
+  onDuplicate?: (clipId: string) => void;
+  onDelete?: (clipId: string) => void;
+  onSplit?: (clipId: string) => void;
 }
 
 export const DraggableClip = memo(function DraggableClip({
@@ -35,21 +35,13 @@ export const DraggableClip = memo(function DraggableClip({
   onDelete,
   onSplit,
 }: DraggableClipProps) {
-  const [isDragging, setIsDragging] = useState(false)
-  const [isResizing, setIsResizing] = useState<"left" | "right" | null>(null)
-  const [dragStartTime, setDragStartTime] = useState(0)
-  const dragControls = useDragControls()
-  const cleanupRef = useRef<(() => void) | null>(null)
-
-  // Cleanup event listeners on unmount or when resize ends
-  useEffect(() => {
-    return () => {
-      if (cleanupRef.current) {
-        cleanupRef.current()
-        cleanupRef.current = null
-      }
-    }
-  }, [])
+  const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState<"left" | "right" | null>(null);
+  const [dragStartTime, setDragStartTime] = useState(0);
+  const dragControls = useDragControls();
+  const resizeStartPosRef = useRef({ time: 0, duration: 0 });
+  const finalSnappedPosRef = useRef({ time: 0, duration: 0 });
+  const cleanupRef = useRef<(() => void) | null>(null);
 
   const handleDragStart = (event: MouseEvent | TouchEvent | PointerEvent) => {
     setIsDragging(true)
@@ -79,6 +71,15 @@ export const DraggableClip = memo(function DraggableClip({
     }
   }
 
+  // Cleanup event listeners on unmount
+  useEffect(() => {
+    return () => {
+      if (cleanupRef.current) {
+        cleanupRef.current();
+      }
+    };
+  }, []);
+
   const handleResizeStart = (side: "left" | "right") => (e: React.MouseEvent) => {
     e.stopPropagation()
     setIsResizing(side)
@@ -86,6 +87,9 @@ export const DraggableClip = memo(function DraggableClip({
     const startX = e.clientX
     const startTime = clip.startTime
     const startDuration = clip.duration
+
+    // Store initial position for final notification
+    resizeStartPosRef.current = { time: startTime, duration: startDuration };
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
       const deltaX = moveEvent.clientX - startX
@@ -97,8 +101,12 @@ export const DraggableClip = memo(function DraggableClip({
         const snappedStart = Math.round(newStartTime * 4) / 4 // Snap to 0.25s grid
         const newDuration = Math.max(0.25, startDuration - (snappedStart - startTime))
 
-        onMove(clip.id, snappedStart)
-        onResize(clip.id, newDuration)
+        // Track the final snapped position for comparison in handleMouseUp
+        finalSnappedPosRef.current = { time: snappedStart, duration: newDuration };
+
+        // Silent move during resize (no notification)
+        onMove(clip.id, snappedStart, true);
+        onResize(clip.id, newDuration);
       } else {
         // Resizing from the right: change only duration
         const newDuration = Math.max(0.25, startDuration + deltaTime)
@@ -109,14 +117,21 @@ export const DraggableClip = memo(function DraggableClip({
     }
 
     const handleMouseUp = () => {
-      setIsResizing(null)
-      document.removeEventListener("mousemove", handleMouseMove)
-      document.removeEventListener("mouseup", handleMouseUp)
-      cleanupRef.current = null
-    }
+      setIsResizing(null);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
 
-    document.addEventListener("mousemove", handleMouseMove)
-    document.addEventListener("mouseup", handleMouseUp)
+      // Only show notification if position actually changed
+      // Compare the final snapped position (tracked during mousemove) with initial position
+      if (side === "left" && finalSnappedPosRef.current.time !== resizeStartPosRef.current.time) {
+        // Trigger final move with notification using the tracked final position
+        onMove(clip.id, finalSnappedPosRef.current.time, false);
+      }
+    };
+
+    // Add event listeners
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
 
     // Store cleanup function in ref for unmount cleanup
     cleanupRef.current = () => {

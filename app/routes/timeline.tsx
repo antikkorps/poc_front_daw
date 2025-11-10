@@ -37,19 +37,19 @@ export default function TimelinePage() {
     });
   };
 
-  const handleClipMove = (clipId: string, newStartTime: number) => {
-    setClips((prev) => {
-      const clip = prev.find((c) => c.id === clipId);
-      
-      // Show toast notification when drag is complete
-      if (clip) {
-        showToast(`Moved "${clip.name}" to ${newStartTime.toFixed(2)}s`, "success", 1000);
-      }
-      
-      return prev.map((c) =>
+  const handleClipMove = (clipId: string, newStartTime: number, silent = false) => {
+    const clip = clips.find((c) => c.id === clipId);
+
+    setClips((prev) =>
+      prev.map((c) =>
         c.id === clipId ? { ...c, startTime: newStartTime } : c
-      );
-    });
+      )
+    );
+
+    // Show toast notification when drag is complete (unless silent)
+    if (clip && !silent) {
+      showToast(`Moved "${clip.name}" to ${newStartTime.toFixed(2)}s`, "success", 1000);
+    }
   };
 
   const handleClipResize = (clipId: string, newDuration: number) => {

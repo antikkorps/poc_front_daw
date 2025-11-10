@@ -33,6 +33,7 @@ export const DraggableMidiNote = memo(function DraggableMidiNote({
   const [isResizing, setIsResizing] = useState(false);
   const [dragStartTime, setDragStartTime] = useState(0);
   const [dragStartPitch, setDragStartPitch] = useState(0);
+  const [previewPos, setPreviewPos] = useState<{ x: number; y: number } | null>(null);
 
   const y = (maxNote - note.pitch) * noteHeight;
   const x = note.startTime * beatWidth;
@@ -43,7 +44,26 @@ export const DraggableMidiNote = memo(function DraggableMidiNote({
     setIsDragging(true);
     setDragStartTime(note.startTime);
     setDragStartPitch(note.pitch);
+    setPreviewPos(null);
     onSelect(note.id);
+  };
+
+  const handleDrag = (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: { offset: { x: number; y: number } }
+  ) => {
+    // Show live preview of snapped position
+    const timeOffset = info.offset.x / beatWidth;
+    const pitchOffset = -Math.round(info.offset.y / noteHeight);
+
+    const newStartTime = Math.max(0, dragStartTime + timeOffset);
+    const snappedTime = snapToGrid(newStartTime);
+    const newPitch = Math.max(0, Math.min(127, dragStartPitch + pitchOffset));
+
+    const previewX = snappedTime * beatWidth;
+    const previewY = (maxNote - newPitch) * noteHeight;
+
+    setPreviewPos({ x: previewX, y: previewY });
   };
 
   const handleDragEnd = (
@@ -51,6 +71,7 @@ export const DraggableMidiNote = memo(function DraggableMidiNote({
     info: { offset: { x: number; y: number } }
   ) => {
     setIsDragging(false);
+    setPreviewPos(null);
 
     // Calculate final position
     const timeOffset = info.offset.x / beatWidth;
@@ -93,35 +114,51 @@ export const DraggableMidiNote = memo(function DraggableMidiNote({
   };
 
   return (
-    <motion.div
-      drag={!isResizing}
-      dragMomentum={false}
-      dragElastic={0}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      whileHover={{ scale: 1.05, zIndex: 10 }}
-      className={cn(
-        "absolute rounded cursor-move transition-all pointer-events-auto",
-        "hover:brightness-110",
-        isSelected && "ring-2 ring-white",
-        (isDragging || isResizing) && "opacity-75 z-50"
+    <>
+      {/* Preview ghost note during drag */}
+      {isDragging && previewPos && (
+        <div
+          className="absolute rounded border-2 border-cyan-400 border-dashed pointer-events-none z-40"
+          style={{
+            top: previewPos.y + 2,
+            left: previewPos.x,
+            width: width - 4,
+            height: noteHeight - 4,
+            backgroundColor: "rgba(6, 182, 212, 0.2)",
+          }}
+        />
       )}
-      style={{
-        top: y + 2,
-        left: x,
-        width: width - 4,
-        height: noteHeight - 4,
-        backgroundColor: `rgba(6, 182, 212, ${0.5 + velocity * 0.5})`,
-      }}
-      onClick={(e) => {
-        e.stopPropagation();
-        onSelect(note.id);
-      }}
-      onDoubleClick={(e) => {
-        e.stopPropagation();
-        onDelete(note.id);
-      }}
-    >
+
+      <motion.div
+        drag={!isResizing}
+        dragMomentum={false}
+        dragElastic={0}
+        onDragStart={handleDragStart}
+        onDrag={handleDrag}
+        onDragEnd={handleDragEnd}
+        whileHover={{ scale: 1.05, zIndex: 10 }}
+        className={cn(
+          "absolute rounded cursor-move transition-all pointer-events-auto",
+          "hover:brightness-110",
+          isSelected && "ring-2 ring-white",
+          (isDragging || isResizing) && "opacity-50 z-50"
+        )}
+        style={{
+          top: y + 2,
+          left: x,
+          width: width - 4,
+          height: noteHeight - 4,
+          backgroundColor: `rgba(6, 182, 212, ${0.5 + velocity * 0.5})`,
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect(note.id);
+        }}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          onDelete(note.id);
+        }}
+      >
       <div className="h-full flex items-center px-2 relative">
         <span className="text-xs text-white/90 font-mono">{note.velocity}</span>
 
@@ -136,5 +173,6 @@ export const DraggableMidiNote = memo(function DraggableMidiNote({
         />
       </div>
     </motion.div>
+    </>
   );
 });
