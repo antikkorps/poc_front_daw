@@ -1,5 +1,5 @@
 import { motion, useDragControls, type PanInfo } from "framer-motion";
-import { useState, useRef, memo } from "react";
+import { useState, useRef, memo, useEffect } from "react";
 import { cn } from "~/lib/utils";
 import { ContextMenu, type ContextMenuItem } from "~/components/ui/context-menu";
 import type { Clip } from "~/types/audio";
@@ -11,10 +11,6 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react"
-import { memo, useEffect, useRef, useState } from "react"
-import { ContextMenu, type ContextMenuItem } from "~/components/ui/context-menu"
-import { cn } from "~/lib/utils"
-import type { Clip } from "~/types/audio"
 
 interface DraggableClipProps {
   clip: Clip;
@@ -44,6 +40,8 @@ export const DraggableClip = memo(function DraggableClip({
   const [dragStartTime, setDragStartTime] = useState(0);
   const dragControls = useDragControls();
   const resizeStartPosRef = useRef({ time: 0, duration: 0 });
+  const finalSnappedPosRef = useRef({ time: 0, duration: 0 });
+  const cleanupRef = useRef<(() => void) | null>(null);
 
   const handleDragStart = (event: MouseEvent | TouchEvent | PointerEvent) => {
     setIsDragging(true)
@@ -73,6 +71,15 @@ export const DraggableClip = memo(function DraggableClip({
     }
   }
 
+  // Cleanup event listeners on unmount
+  useEffect(() => {
+    return () => {
+      if (cleanupRef.current) {
+        cleanupRef.current();
+      }
+    };
+  }, []);
+
   const handleResizeStart = (side: "left" | "right") => (e: React.MouseEvent) => {
     e.stopPropagation()
     setIsResizing(side)
@@ -94,6 +101,9 @@ export const DraggableClip = memo(function DraggableClip({
         const snappedStart = Math.round(newStartTime * 4) / 4 // Snap to 0.25s grid
         const newDuration = Math.max(0.25, startDuration - (snappedStart - startTime))
 
+        // Track the final snapped position for comparison in handleMouseUp
+        finalSnappedPosRef.current = { time: snappedStart, duration: newDuration };
+
         // Silent move during resize (no notification)
         onMove(clip.id, snappedStart, true);
         onResize(clip.id, newDuration);
@@ -112,11 +122,16 @@ export const DraggableClip = memo(function DraggableClip({
       document.removeEventListener("mouseup", handleMouseUp);
 
       // Only show notification if position actually changed
-      if (side === "left" && clip.startTime !== resizeStartPosRef.current.time) {
-        // Trigger final move with notification
-        onMove(clip.id, clip.startTime, false);
+      // Compare the final snapped position (tracked during mousemove) with initial position
+      if (side === "left" && finalSnappedPosRef.current.time !== resizeStartPosRef.current.time) {
+        // Trigger final move with notification using the tracked final position
+        onMove(clip.id, finalSnappedPosRef.current.time, false);
       }
     };
+
+    // Add event listeners
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
 
     // Store cleanup function in ref for unmount cleanup
     cleanupRef.current = () => {
