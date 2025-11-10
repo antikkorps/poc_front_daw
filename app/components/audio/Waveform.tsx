@@ -7,7 +7,7 @@ interface WaveformProps {
   animate?: boolean;
 }
 
-export const Waveform = memo(function Waveform({ className, color = "#06b6d4", animate: shouldAnimate = true }: WaveformProps) {
+function WaveformComponent({ className, color = "#06b6d4", animate: shouldAnimate = true }: WaveformProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | undefined>(undefined);
 
@@ -113,4 +113,16 @@ export const Waveform = memo(function Waveform({ className, color = "#06b6d4", a
       className={cn("w-full h-full", className)}
     />
   );
-});
+}
+
+// Custom comparison function to prevent unnecessary re-renders
+// Only re-render if color or animate props actually change
+function arePropsEqual(prevProps: WaveformProps, nextProps: WaveformProps): boolean {
+  return (
+    prevProps.className === nextProps.className &&
+    prevProps.color === nextProps.color &&
+    prevProps.animate === nextProps.animate
+  );
+}
+
+export const Waveform = memo(WaveformComponent, arePropsEqual);
