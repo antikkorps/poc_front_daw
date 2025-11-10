@@ -39,6 +39,17 @@ export const DraggableClip = memo(function DraggableClip({
   const [isResizing, setIsResizing] = useState<"left" | "right" | null>(null);
   const [dragStartTime, setDragStartTime] = useState(0);
   const dragControls = useDragControls();
+  const cleanupRef = useRef<(() => void) | null>(null);
+
+  // Cleanup event listeners on unmount or when resize ends
+  useEffect(() => {
+    return () => {
+      if (cleanupRef.current) {
+        cleanupRef.current();
+        cleanupRef.current = null;
+      }
+    };
+  }, []);
 
   const handleDragStart = (event: MouseEvent | TouchEvent | PointerEvent) => {
     setIsDragging(true);
@@ -98,10 +109,17 @@ export const DraggableClip = memo(function DraggableClip({
       setIsResizing(null);
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
+      cleanupRef.current = null;
     };
 
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", handleMouseUp);
+
+    // Store cleanup function in ref for unmount cleanup
+    cleanupRef.current = () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
   };
 
   const contextMenuItems: ContextMenuItem[] = [
@@ -119,8 +137,6 @@ export const DraggableClip = memo(function DraggableClip({
     },
     {
       separator: true,
-      label: "",
-      onClick: () => {},
     },
     {
       label: clip.gain && clip.gain < -40 ? "Unmute" : "Mute",
@@ -139,8 +155,6 @@ export const DraggableClip = memo(function DraggableClip({
     },
     {
       separator: true,
-      label: "",
-      onClick: () => {},
     },
     {
       label: "Delete",
