@@ -6,11 +6,15 @@ import type { Clip } from "~/types/audio";
 import {
   Copy,
   Scissors,
+  SplitSquareVertical,
   Trash2,
   Volume2,
   VolumeX,
-  SplitSquareVertical,
-} from "lucide-react";
+} from "lucide-react"
+import { memo, useEffect, useRef, useState } from "react"
+import { ContextMenu, type ContextMenuItem } from "~/components/ui/context-menu"
+import { cn } from "~/lib/utils"
+import type { Clip } from "~/types/audio"
 
 interface DraggableClipProps {
   clip: Clip;
@@ -42,62 +46,65 @@ export const DraggableClip = memo(function DraggableClip({
   const resizeStartPosRef = useRef({ time: 0, duration: 0 });
 
   const handleDragStart = (event: MouseEvent | TouchEvent | PointerEvent) => {
-    setIsDragging(true);
-    setDragStartTime(clip.startTime);
+    setIsDragging(true)
+    setDragStartTime(clip.startTime)
     // Check if shift key is pressed during drag start
-    const shiftKey = "shiftKey" in event && event.shiftKey;
-    onSelect(clip.id, shiftKey);
-  };
+    const shiftKey = "shiftKey" in event && event.shiftKey
+    onSelect(clip.id, shiftKey)
+  }
 
-  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    setIsDragging(false);
+  const handleDragEnd = (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => {
+    setIsDragging(false)
 
     // Calculate final position on drag end
-    const pixelOffset = info.offset.x;
-    const timeOffset = pixelOffset / zoom;
-    const newStartTime = Math.max(0, dragStartTime + timeOffset);
+    const pixelOffset = info.offset.x
+    const timeOffset = pixelOffset / zoom
+    const newStartTime = Math.max(0, dragStartTime + timeOffset)
 
     // Snap to grid (0.25 second intervals)
-    const snappedTime = Math.round(newStartTime * 4) / 4;
+    const snappedTime = Math.round(newStartTime * 4) / 4
 
     // Only call onMove once at the end if position changed
     if (snappedTime !== clip.startTime) {
-      onMove(clip.id, snappedTime);
+      onMove(clip.id, snappedTime)
     }
-  };
+  }
 
   const handleResizeStart = (side: "left" | "right") => (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsResizing(side);
+    e.stopPropagation()
+    setIsResizing(side)
 
-    const startX = e.clientX;
-    const startTime = clip.startTime;
-    const startDuration = clip.duration;
+    const startX = e.clientX
+    const startTime = clip.startTime
+    const startDuration = clip.duration
 
     // Store initial position for final notification
     resizeStartPosRef.current = { time: startTime, duration: startDuration };
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
-      const deltaX = moveEvent.clientX - startX;
-      const deltaTime = deltaX / zoom;
+      const deltaX = moveEvent.clientX - startX
+      const deltaTime = deltaX / zoom
 
       if (side === "left") {
         // Resizing from the left: change both startTime and duration
-        const newStartTime = Math.max(0, startTime + deltaTime);
-        const snappedStart = Math.round(newStartTime * 4) / 4; // Snap to 0.25s grid
-        const newDuration = Math.max(0.25, startDuration - (snappedStart - startTime));
+        const newStartTime = Math.max(0, startTime + deltaTime)
+        const snappedStart = Math.round(newStartTime * 4) / 4 // Snap to 0.25s grid
+        const newDuration = Math.max(0.25, startDuration - (snappedStart - startTime))
 
         // Silent move during resize (no notification)
         onMove(clip.id, snappedStart, true);
         onResize(clip.id, newDuration);
       } else {
         // Resizing from the right: change only duration
-        const newDuration = Math.max(0.25, startDuration + deltaTime);
-        const snappedDuration = Math.round(newDuration * 4) / 4; // Snap to 0.25s grid
+        const newDuration = Math.max(0.25, startDuration + deltaTime)
+        const snappedDuration = Math.round(newDuration * 4) / 4 // Snap to 0.25s grid
 
-        onResize(clip.id, snappedDuration);
+        onResize(clip.id, snappedDuration)
       }
-    };
+    }
 
     const handleMouseUp = () => {
       setIsResizing(null);
@@ -111,9 +118,12 @@ export const DraggableClip = memo(function DraggableClip({
       }
     };
 
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-  };
+    // Store cleanup function in ref for unmount cleanup
+    cleanupRef.current = () => {
+      document.removeEventListener("mousemove", handleMouseMove)
+      document.removeEventListener("mouseup", handleMouseUp)
+    }
+  }
 
   const contextMenuItems: ContextMenuItem[] = [
     {
@@ -130,12 +140,15 @@ export const DraggableClip = memo(function DraggableClip({
     },
     {
       separator: true,
-      label: "",
-      onClick: () => {},
     },
     {
       label: clip.gain && clip.gain < -40 ? "Unmute" : "Mute",
-      icon: clip.gain && clip.gain < -40 ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />,
+      icon:
+        clip.gain && clip.gain < -40 ? (
+          <Volume2 className="w-4 h-4" />
+        ) : (
+          <VolumeX className="w-4 h-4" />
+        ),
       onClick: () => {
         // Toggle mute (mock)
       },
@@ -150,8 +163,6 @@ export const DraggableClip = memo(function DraggableClip({
     },
     {
       separator: true,
-      label: "",
-      onClick: () => {},
     },
     {
       label: "Delete",
@@ -160,7 +171,7 @@ export const DraggableClip = memo(function DraggableClip({
       danger: true,
       shortcut: "Del",
     },
-  ];
+  ]
 
   return (
     <ContextMenu items={contextMenuItems}>
@@ -187,14 +198,12 @@ export const DraggableClip = memo(function DraggableClip({
           backgroundColor: clip.color,
         }}
         onClick={(e) => {
-          e.stopPropagation();
-          onSelect(clip.id, e.shiftKey);
+          e.stopPropagation()
+          onSelect(clip.id, e.shiftKey)
         }}
       >
         <div className="p-2 h-full flex flex-col justify-between pointer-events-none">
-          <div className="text-xs font-medium text-white truncate">
-            {clip.name}
-          </div>
+          <div className="text-xs font-medium text-white truncate">{clip.name}</div>
           <div className="flex justify-between items-end">
             <span className="text-xs text-white/70">
               {clip.type === "audio" ? "♪" : "⌨"}
@@ -238,5 +247,5 @@ export const DraggableClip = memo(function DraggableClip({
         />
       </motion.div>
     </ContextMenu>
-  );
-});
+  )
+})

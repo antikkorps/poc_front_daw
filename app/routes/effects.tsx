@@ -1,23 +1,23 @@
-import { useState, useCallback } from "react";
-import { Layout } from "~/components/layout/Layout";
 import {
-  ReactFlow,
   Background,
   Controls,
   MiniMap,
+  ReactFlow,
   addEdge,
-  useNodesState,
   useEdgesState,
-  type Node,
-  type Edge,
+  useNodesState,
   type Connection,
-} from "@xyflow/react";
-import "@xyflow/react/dist/style.css";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
-import { Knob } from "~/components/audio/Knob";
-import { Button } from "~/components/ui/button";
-import { Power } from "lucide-react";
-import { useToast } from "~/lib/toast";
+  type Edge,
+  type Node,
+} from "@xyflow/react"
+import "@xyflow/react/dist/style.css"
+import { Power } from "lucide-react"
+import { useCallback, useState } from "react"
+import { Knob } from "~/components/audio/Knob"
+import { Layout } from "~/components/layout/Layout"
+import { Button } from "~/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card"
+import { useToast } from "~/lib/toast"
 
 const initialNodes: Node[] = [
   {
@@ -52,7 +52,7 @@ const initialNodes: Node[] = [
     position: { x: 750, y: 200 },
     style: { background: "#10b981", color: "white", border: "2px solid #059669" },
   },
-];
+]
 
 const initialEdges: Edge[] = [
   { id: "e1", source: "input", target: "filter", animated: true },
@@ -60,7 +60,7 @@ const initialEdges: Edge[] = [
   { id: "e3", source: "filter", target: "reverb", animated: true },
   { id: "e4", source: "delay", target: "reverb", animated: true },
   { id: "e5", source: "reverb", target: "output", animated: true },
-];
+]
 
 // Effect presets - defined outside component to prevent recreation
 const filterPresets = {
@@ -68,105 +68,119 @@ const filterPresets = {
   "High Pass Clean": { cutoff: 250, resonance: 0.1, type: 1 },
   "Band Pass Vocal": { cutoff: 2000, resonance: 0.6, type: 2 },
   "Resonant Sweep": { cutoff: 5000, resonance: 0.9, type: 0 },
-};
+}
 
 const delayPresets = {
-  "Slapback": { time: 0.125, feedback: 0.2, mix: 0.2 },
+  Slapback: { time: 0.125, feedback: 0.2, mix: 0.2 },
   "Quarter Note": { time: 0.5, feedback: 0.4, mix: 0.3 },
   "Long Echo": { time: 1.0, feedback: 0.6, mix: 0.4 },
   "Ping Pong": { time: 0.375, feedback: 0.5, mix: 0.35 },
-};
+}
 
 const reverbPresets = {
   "Small Room": { roomSize: 0.3, damping: 0.6, mix: 0.15 },
   "Medium Hall": { roomSize: 0.6, damping: 0.5, mix: 0.25 },
   "Large Cathedral": { roomSize: 0.9, damping: 0.3, mix: 0.35 },
-  "Plate": { roomSize: 0.7, damping: 0.7, mix: 0.20 },
-};
+  Plate: { roomSize: 0.7, damping: 0.7, mix: 0.2 },
+}
 
 export default function EffectsPage() {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
-  const { showToast } = useToast();
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null)
+  const { showToast } = useToast()
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
     [setEdges]
-  );
+  )
 
   const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
-    setSelectedNode(node);
-  }, []);
+    setSelectedNode(node)
+  }, [])
 
   // Effect parameters state
-  const [filterParams, setFilterParams] = useState({ cutoff: 1000, resonance: 0.7, type: 0 });
-  const [delayParams, setDelayParams] = useState({ time: 0.375, feedback: 0.4, mix: 0.3 });
-  const [reverbParams, setReverbParams] = useState({ roomSize: 0.7, damping: 0.5, mix: 0.25 });
+  const [filterParams, setFilterParams] = useState({
+    cutoff: 1000,
+    resonance: 0.7,
+    type: 0,
+  })
+  const [delayParams, setDelayParams] = useState({ time: 0.375, feedback: 0.4, mix: 0.3 })
+  const [reverbParams, setReverbParams] = useState({
+    roomSize: 0.7,
+    damping: 0.5,
+    mix: 0.25,
+  })
 
   // Bypass state for each effect
   const [bypassedEffects, setBypassedEffects] = useState<Record<string, boolean>>({
     filter: false,
     delay: false,
     reverb: false,
-  });
+  })
 
   const toggleBypass = useCallback(
     (effectId: string, effectName: string) => {
       setBypassedEffects((prev) => {
-        const newState = !prev[effectId];
+        const newState = !prev[effectId]
         showToast(
           `${effectName} ${newState ? "bypassed" : "enabled"}`,
           newState ? "warning" : "success",
           1500
-        );
-        return { ...prev, [effectId]: newState };
-      });
+        )
+        return { ...prev, [effectId]: newState }
+      })
     },
     [showToast]
-  );
+  )
 
   const loadPreset = useCallback(
     (effectType: string, presetName: string) => {
       if (effectType === "filter") {
-        const preset = filterPresets[presetName as keyof typeof filterPresets];
+        const preset = filterPresets[presetName as keyof typeof filterPresets]
         if (preset) {
-          setFilterParams(preset);
-          showToast(`Loaded preset: ${presetName}`, "success", 1500);
+          setFilterParams(preset)
+          showToast(`Loaded preset: ${presetName}`, "success", 1500)
         }
       } else if (effectType === "delay") {
-        const preset = delayPresets[presetName as keyof typeof delayPresets];
+        const preset = delayPresets[presetName as keyof typeof delayPresets]
         if (preset) {
-          setDelayParams(preset);
-          showToast(`Loaded preset: ${presetName}`, "success", 1500);
+          setDelayParams(preset)
+          showToast(`Loaded preset: ${presetName}`, "success", 1500)
         }
       } else if (effectType === "reverb") {
-        const preset = reverbPresets[presetName as keyof typeof reverbPresets];
+        const preset = reverbPresets[presetName as keyof typeof reverbPresets]
         if (preset) {
-          setReverbParams(preset);
-          showToast(`Loaded preset: ${presetName}`, "success", 1500);
+          setReverbParams(preset)
+          showToast(`Loaded preset: ${presetName}`, "success", 1500)
         }
       }
     },
     [showToast]
-  );
+  )
 
   const renderEffectControls = (): React.ReactNode => {
-    if (!selectedNode || selectedNode.type === "input" || selectedNode.type === "output") {
+    if (
+      !selectedNode ||
+      selectedNode.type === "input" ||
+      selectedNode.type === "output"
+    ) {
       return (
         <div className="text-center text-zinc-500 py-8">
           Select an effect node to edit parameters
         </div>
-      );
+      )
     }
 
-    const effectType = selectedNode.data.type as string;
-    const isBypassed = bypassedEffects[selectedNode.id];
+    const effectType = selectedNode.data.type as string
+    const isBypassed = bypassedEffects[selectedNode.id]
 
     switch (effectType) {
       case "filter":
         return (
-          <div className={`space-y-6 transition-opacity ${isBypassed ? "opacity-40" : ""}`}>
+          <div
+            className={`space-y-6 transition-opacity ${isBypassed ? "opacity-40" : ""}`}
+          >
             {isBypassed && (
               <div className="text-xs text-amber-500 text-center py-2 bg-amber-500/10 rounded border border-amber-500/20">
                 Effect is bypassed
@@ -226,11 +240,13 @@ export default function EffectsPage() {
               </div>
             </div>
           </div>
-        );
+        )
 
       case "delay":
         return (
-          <div className={`space-y-6 transition-opacity ${isBypassed ? "opacity-40" : ""}`}>
+          <div
+            className={`space-y-6 transition-opacity ${isBypassed ? "opacity-40" : ""}`}
+          >
             {isBypassed && (
               <div className="text-xs text-amber-500 text-center py-2 bg-amber-500/10 rounded border border-amber-500/20">
                 Effect is bypassed
@@ -283,11 +299,13 @@ export default function EffectsPage() {
               />
             </div>
           </div>
-        );
+        )
 
       case "reverb":
         return (
-          <div className={`space-y-6 transition-opacity ${isBypassed ? "opacity-40" : ""}`}>
+          <div
+            className={`space-y-6 transition-opacity ${isBypassed ? "opacity-40" : ""}`}
+          >
             {isBypassed && (
               <div className="text-xs text-amber-500 text-center py-2 bg-amber-500/10 rounded border border-amber-500/20">
                 Effect is bypassed
@@ -340,12 +358,12 @@ export default function EffectsPage() {
               />
             </div>
           </div>
-        );
+        )
 
       default:
-        return null;
+        return null
     }
-  };
+  }
 
   return (
     <Layout>
@@ -365,8 +383,8 @@ export default function EffectsPage() {
             <Controls />
             <MiniMap
               nodeColor={(node) => {
-                const style = node.style as any;
-                return style?.background || "#3b82f6";
+                const style = node.style as any
+                return style?.background || "#3b82f6"
               }}
               maskColor="rgba(0, 0, 0, 0.5)"
             />
@@ -387,8 +405,8 @@ export default function EffectsPage() {
                 {initialNodes
                   .filter((n) => n.type !== "input" && n.type !== "output")
                   .map((node) => {
-                    const effectId = node.id;
-                    const isBypassed = bypassedEffects[effectId];
+                    const effectId = node.id
+                    const isBypassed = bypassedEffects[effectId]
                     return (
                       <div
                         key={node.id}
@@ -398,7 +416,9 @@ export default function EffectsPage() {
                             : "bg-zinc-900 border-zinc-800"
                         }`}
                       >
-                        <span className={`text-sm ${isBypassed ? "line-through text-zinc-600" : ""}`}>
+                        <span
+                          className={`text-sm ${isBypassed ? "line-through text-zinc-600" : ""}`}
+                        >
                           {(node.data as { label: string }).label}
                         </span>
                         <Button
@@ -416,7 +436,7 @@ export default function EffectsPage() {
                           />
                         </Button>
                       </div>
-                    );
+                    )
                   })}
               </div>
             </CardContent>
@@ -433,5 +453,5 @@ export default function EffectsPage() {
         </div>
       </div>
     </Layout>
-  );
+  )
 }
